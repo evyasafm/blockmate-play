@@ -397,7 +397,9 @@
     .setting-sub { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
     .setting-group { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 14px 0 2px; }
     .toggle-btn { min-width: 52px; text-align: center; font-weight: 700; font-size: 12px; }
-    a.toggle-btn.dl { text-decoration: none; display: inline-block; color: var(--accent); border-color: rgba(76,201,240,0.35); }
+    a.toggle-btn.dl { text-decoration: none; display: inline-block; color: var(--accent); border-color: rgba(76,201,240,0.35); text-align: center; }
+    .dl-stack { display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex: 0 0 auto; min-width: 64px; }
+    .dl-word { font-size: 11px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; }
     .checks { display: flex; gap: 12px; font-size: 12px; font-weight: 700; color: var(--text); }
     .checks label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
     .checks input { width: 16px; height: 16px; accent-color: var(--accent); }
@@ -762,8 +764,8 @@
       </div>
       <div class="setting-group">Developer</div>
       <div class="setting-row">
-        <div><div class="setting-label">Direct download</div><div class="setting-sub">The whole game as one file (Blockmate.html) — opens offline in any browser. On the phone it goes out through the share sheet.</div></div>
-        <a class="toggle-btn dl" id="downloadBtn" href="blockmate.html" download="Blockmate.html">Save</a>
+        <div><div class="setting-label">Direct download</div><div class="setting-sub">HTML: the whole game as one file, opens offline in any browser (on the phone it goes out through the share sheet). APK: the Android app.</div></div>
+        <div class="dl-stack"><span class="dl-word">Save</span><a class="toggle-btn dl" id="downloadBtn" href="blockmate.html" download="Blockmate.html">HTML</a><a class="toggle-btn dl" id="downloadApkBtn" href="https://evyasafm.github.io/blockmate-play/Blockmate.apk" target="_blank" rel="noopener">APK</a></div>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Show all levels</div><div class="setting-sub">Ignore locks — every level in every bank is open. On by default while we build.</div></div>

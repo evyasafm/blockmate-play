@@ -635,7 +635,7 @@
         <div class="online-note" id="onlineNote"></div>
       </div>
       <div class="settingsbar">
-        <div class="rating" id="ratingChip" hidden title="Your duel rating — moves after every game against the computer or online"><span>Rating</span><b id="ratingValue">1200</b><small id="ratingDelta"></small></div>
+        <div class="rating" id="ratingChip" hidden title="Your duel rating — moves after every game against the AI or online"><span>Rating</span><b id="ratingValue">1200</b><small id="ratingDelta"></small></div>
         <div class="scoreDisplay" id="scoreDisplay" role="button" tabindex="0" title="Tap to switch between this level's score and your running total">
           <span id="scoreLabel">Time</span>
           <span class="scoreValue" id="scoreValue">0:00</span>
@@ -3350,10 +3350,10 @@
   // (both humans are "A"/"B"), the host's or guest's side online.
   function mySide() { return isOnline() ? online.side : 'A'; }
   function isMe(side) { return isOnline() ? side === online.side : (duelVsComputer() && side === 'A'); }
-  // Names: You / Computer against the machine; Blue / Red whenever two
+  // Names: You / AI against the machine; Blue / Red whenever two
   // people play (same phone or online — online both screens read the same).
   function duelPlayerName(side) {
-    if (duelVsComputer()) return side === 'A' ? 'You' : 'Computer';
+    if (duelVsComputer()) return side === 'A' ? 'You' : 'AI';
     return side === 'A' ? 'Blue' : 'Red';
   }
   function duelIsComputer(side) { return duelVsComputer() && side === 'B'; }
@@ -3723,7 +3723,7 @@
   function updateDuelBar() {
     var g = duel.game; if (!g) return;
     duelNameAEl.textContent = duelPlayerName('A');
-    duelNameBEl.textContent = duelVsComputer() ? 'CPU' : duelPlayerName('B'); // short, so the bar's middle text keeps its room
+    duelNameBEl.textContent = duelPlayerName('B');
     scoreAEl.textContent = String(duel.score.A);
     scoreBEl.textContent = String(duel.score.B);
     if (isOnline()) { duelNameAEl.textContent += online.side === 'A' ? ' (you)' : ''; duelNameBEl.textContent += online.side === 'B' ? ' (you)' : ''; }
@@ -3736,9 +3736,8 @@
     duelSideBEl.classList.toggle('low', g.phase === 'play' && g.turn === 'B' && cB <= 10000);
     var left = g.pool.filter(function (p) { return !p.used; }).length;
     var tail = duelIsPuzzle() ? 'Puzzle ' + (g.levelIdx + 1) + '/' + g.levels.length + ' · ' + g.level().name : left + ' in pool';
-    function barName(side) { return duelVsComputer() && side === 'B' ? 'CPU' : duelPlayerName(side); }
-    if (g.phase === 'play') duelTurnEl.textContent = isMe(g.turn) ? 'Your move' : barName(g.turn) + ' to move';
-    else if (g.phase === 'over') duelTurnEl.textContent = barName(g.winner) + (g.winner === 'A' && duelVsComputer() ? ' win!' : ' wins!');
+    if (g.phase === 'play') duelTurnEl.textContent = isMe(g.turn) ? 'Your move' : duelPlayerName(g.turn) + ' to move';
+    else if (g.phase === 'over') duelTurnEl.textContent = duelPlayerName(g.winner) + (g.winner === 'A' && duelVsComputer() ? ' win!' : ' wins!');
     else duelTurnEl.textContent = isOnline() && !g.phase ? 'Not connected' : 'Drawing…';
     renderClockBtn();
     trophyAEl.hidden = !(g.phase === 'over' && g.winner === 'A');
@@ -3862,7 +3861,7 @@
     // pass-and-play whoever won is at the phone, so it's always a win.
     var vsSomeone = duelVsComputer() || isOnline();
     if (youWon || !vsSomeone) { boardEl.classList.add('solved'); playWinSound(); } else playFailSound();
-    var title = duelVsComputer() ? (youWon ? 'You win!' : 'Computer wins') : duelPlayerName(g.winner) + ' wins!';
+    var title = duelVsComputer() ? (youWon ? 'You win!' : 'AI wins') : duelPlayerName(g.winner) + ' wins!';
     setStatus(title, !youWon && (duelVsComputer() || isOnline()));
     showDuelResultCard(g, title, why, youWon, rDelta);
     broadcast();
@@ -3978,6 +3977,7 @@
     locked = true; lockReason = 'duelsetup';
     renderBoard(); renderTray();
     duelTurnEl.textContent = 'Not connected';
+    trophyAEl.hidden = trophyBEl.hidden = true; // the last game's winner is not this table's
     clockAEl.textContent = clockBEl.textContent = formatClock(duelClockMs());
     scoreAEl.textContent = String(duel.score.A); scoreBEl.textContent = String(duel.score.B);
     duelSideAEl.classList.remove('onturn', 'low'); duelSideBEl.classList.remove('onturn', 'low');
@@ -4176,8 +4176,10 @@
     online.remoteAt = Date.now();
     guestSounds(msg);
     if (msg.rating) online.peerRating = msg.rating;
-    if (msg.moves === 0) duel.replayLog = [];
-    if (online.prevSnap && msg.moves > online.prevSnap.moves && duel.replayLog) { board = msg.board; replayRecord(msg.turn === 'A' ? 'B' : 'A'); }
+    // The guest's replay log: one board per move, counted by the host's move
+    // number so a missed or duplicated frame can't skip or double an entry.
+    if (msg.moves === 0 || !duel.replayLog || duel.replayMovesSeen === undefined || msg.moves < duel.replayMovesSeen) { duel.replayLog = []; duel.replayMovesSeen = -1; }
+    if (msg.moves > duel.replayMovesSeen) { board = msg.board; replayRecord(msg.moves === 0 ? null : (msg.turn === 'A' ? 'B' : 'A')); duel.replayMovesSeen = msg.moves; }
     // The move lock lifts only when the host has processed our move (ack),
     // not on the periodic clock refresh that may have crossed it in flight.
     if (msg.ack === undefined || msg.ack >= online.moveSeq) online.pendingMove = false;
@@ -4809,7 +4811,7 @@
   function duelTutorialStep() {
     if (!tutorialActive || tutorialMode !== 'duel') return;
     var g = duel.game; if (!g) return;
-    var who = duelVsComputer() ? 'the computer is Red' : 'Red is the other player';
+    var who = duelVsComputer() ? 'the AI is Red' : 'Red is the other player';
     var t;
     if (duelIsPuzzle()) {
       t = g.moves === 0
@@ -5289,7 +5291,7 @@
     }
     var stuckN = stillUnused.filter(function (p) { return !anyFit(p.matrix); }).length, fitN = stillUnused.length - stuckN;
     if (stuckN > 0) setStatus(stuckN + ' stuck · ' + fitN + (fitN === 1 ? ' still fits' : ' still fit') + ' — strand ' + (fitN === 1 ? 'it' : 'them') + ' and you win.', false);
-    else setStatus(didClear ? 'A line cleared — that works against you.' : 'Fill it up — strand every remaining piece.', false);
+    else setStatus(didClear ? (tutorialActive && tutorialMode === 'lose' ? 'A line cleared — here it\'s part of the plan. Usually it works against you.' : 'A line cleared — that works against you.') : 'Fill it up — strand every remaining piece.', false);
   }
 
   // ---------- Win / Fail ----------
@@ -5343,7 +5345,7 @@
       big: scoreEnabled && lastStageResult ? String(lastStageResult.finalScore) : formatTime(elapsed),
       delta: scoreEnabled && lastStageResult && lastStageResult.isNewBest ? '▲ new best' : (perfect ? '' : ''),
       line: (lvl.solutions === 1 ? 'The only solution' : 'Solution <b>' + found + ' of ' + solutionsLabel(lvl.solutions) + '</b>') + ' · ' + (resetCount ? resetCount + (resetCount === 1 ? ' reset' : ' resets') : 'no resets') + ' · ' + (hintsUsed ? hintsUsed + (hintsUsed === 1 ? ' hint' : ' hints') : 'no hints') + (rewindsUsed ? ' · ' + rewindsUsed + (rewindsUsed === 1 ? ' rewind' : ' rewinds') : '') + (perfect ? ' <span class="badge-perfect">Perfect</span>' : ''),
-      fair: lvl.intro ? 'Every level has a solution. Some have one, some have many.' : lvl.daily ? '<b>✓ Fair</b> · today\'s board for everyone · rated ' + lvl.difficulty : '<b>✓ Fair</b> · ' + solutionsLabel(lvl.solutions) + (lvl.solutions === 1 ? ' solution' : ' solutions') + ' · rated ' + lvl.difficulty + ' · checked before shipping',
+      fair: lvl.intro ? 'Every level has a solution. Some have one, some have many.' : lvl.daily ? 'Today\'s board — the same for everyone · rated ' + lvl.difficulty : '',
       bar: lvl.daily || lvl.draft || lvl.intro ? null : bankProgress(currentMode, modeLevels, modeIndex),
       sub: '',
       actions: acts
@@ -5371,7 +5373,7 @@
     if (blame && rewindEnabled()) acts.push({ id: 'rewind', label: 'Rewind to move ' + blame.k, primary: true, fn: function () { rewindTo(blame.k); } });
     acts.push({ id: 'retry', label: 'Retry', primary: !(blame && rewindEnabled()), fn: function () { loadLevel(modeIndex); } });
     acts.push({ id: 'hint', label: 'Hint', fn: function () { hideResultCard(); showHint(); } });
-    showResultCard({ kind: 'fail', kicker: title.toUpperCase(), big: sub.replace(/ Tap the board.*$/, ''), line: why, fair: lvl && !lvl.draft ? '<b>✓ Fair</b> · this level has ' + solutionsLabel(lvl.solutions) + (lvl.solutions === 1 ? ' solution' : ' solutions') : '', actions: acts });
+    showResultCard({ kind: 'fail', kicker: title.toUpperCase(), big: sub.replace(/ Tap the board.*$/, ''), line: why, fair: lvl && !lvl.draft ? 'It can be done — this level has ' + solutionsLabel(lvl.solutions) + (lvl.solutions === 1 ? ' solution.' : ' solutions.') : '', actions: acts });
   }
   function pieceName(p) {
     if (!p) return 'piece';
@@ -6077,6 +6079,7 @@
     var maxBoard = Math.min(window.innerWidth - 28, 460);
     var size = Math.floor((maxBoard - 4 * 9) / 8);
     size = Math.max(28, Math.min(54, size));
+    var sizeByWidth = size;
     // measure against the tray at its natural height, not a lock from the previous level
     trayEl.style.minHeight = ''; trayEl.style.maxHeight = '';
     appEl.classList.remove('tight');
@@ -6091,6 +6094,9 @@
     for (var t = 0; t < 4 && trayScale > 0.5 && pageTooTall(); t++) { trayScale = Math.round((trayScale - 0.1) * 10) / 10; apply(size); }
     for (var i2 = 0; i2 < 6 && size > 28 && pageTooTall(); i2++) { size -= 2; apply(size); }
     for (var j = 0; j < 4 && size > 22 && pageTooTall(); j++) { size -= 2; apply(size); }
+    // The steps above are coarse and sacrifice in a fixed order, so once the
+    // pool has shrunk there is often room to give the board back a few px.
+    for (var k = 0; k < 24 && size < sizeByWidth; k++) { apply(size + 1); if (pageTooTall()) { apply(size); break; } size += 1; }
     updateFits();
   }
   function updateFits() {

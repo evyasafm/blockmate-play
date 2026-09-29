@@ -6010,9 +6010,13 @@
   // gap between the board and the tray from dragging the page around.
   var appEl = document.getElementById('app');
   var bufferEl = document.getElementById('bottomBuffer');
+  // Measure the content itself, not the page: once page scrolling is locked
+  // (html.fits-page) the document reports exactly one screen of height,
+  // which would make every later fit believe it already fits.
   function pageTooTall() {
     var extra = bufferEl ? bufferEl.offsetHeight : 0;
-    return document.documentElement.scrollHeight - extra > window.innerHeight + 2;
+    var bottom = appEl.getBoundingClientRect().bottom + (window.scrollY || document.documentElement.scrollTop || 0);
+    return bottom - extra > window.innerHeight + 2;
   }
   function fitCellSize() {
     var maxBoard = Math.min(window.innerWidth - 28, 460);

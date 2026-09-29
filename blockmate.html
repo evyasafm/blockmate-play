@@ -59,6 +59,9 @@
     /* Once everything fits the screen, a finger anywhere on the page (the gap
        between board and tray included) must not pan it. Modals scroll on their own. */
     #app.fits { touch-action: none; }
+    /* When everything fits there is nothing to scroll to: no spacer, no page scroll. */
+    #app.fits .bottom-buffer { display: none; }
+    html.fits-page, html.fits-page body { overflow: hidden; height: 100%; }
     /* Short screens: less air between rows so the board and the pool both stay on screen. */
     #app.tight { gap: 6px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
     #app.tight .duelbar { padding: 4px 6px; }
@@ -6029,7 +6032,12 @@
     for (var j = 0; j < 4 && size > 22 && pageTooTall(); j++) { size -= 2; apply(size); }
     updateFits();
   }
-  function updateFits() { appEl.classList.toggle('fits', !pageTooTall()); }
+  function updateFits() {
+    var fits = !pageTooTall();
+    appEl.classList.toggle('fits', fits);
+    document.documentElement.classList.toggle('fits-page', fits);
+    if (fits && (window.scrollY || document.documentElement.scrollTop)) window.scrollTo(0, 0);
+  }
   function refit() { fitCellSize(); relockTray(); }
 
   // ---------- Controls / modes ----------
@@ -6419,7 +6427,7 @@
       trayLock: function () { return trayEl.style.maxHeight; },
       duelBar: function () { return { turn: duelTurnEl.textContent, trophyA: !trophyAEl.hidden, trophyB: !trophyBEl.hidden, lines: duelTurnEl.textContent.split('\n').length }; },
       lift: function (e) { return liftFor(e, 40); },
-      fits: function () { return { fits: appEl.classList.contains('fits'), tooTall: pageTooTall(), cell: getComputedStyle(document.documentElement).getPropertyValue('--cell').trim(), touch: getComputedStyle(appEl).touchAction }; },
+      fits: function () { return { fits: appEl.classList.contains('fits'), tooTall: pageTooTall(), bufferShown: !!(bufferEl && bufferEl.offsetHeight), scrollH: document.documentElement.scrollHeight, innerH: window.innerHeight, overflow: getComputedStyle(document.documentElement).overflow, cell: getComputedStyle(document.documentElement).getPropertyValue('--cell').trim(), touch: getComputedStyle(appEl).touchAction }; },
       streak: function () { return clearStreak; },
       jump: function (i) { return loadLevel(i); },
       daily: function () { var lvl = modeLevels[modeIndex]; return { key: dailyKey(), done: dailyDone(), streak: dailyStreak(), current: lvl && lvl.daily ? { id: lvl.id, key: lvl.key, mode: lvl.mode, solutions: lvl.solutions, difficulty: lvl.difficulty, board: lvl.board, pieces: lvl.pieces } : null }; },

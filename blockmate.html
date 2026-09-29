@@ -477,11 +477,28 @@
     .vtabs.show { display: flex; }
     .vtab {
       flex: 1; min-width: 0; border: none; background: transparent; color: var(--muted);
-      font-weight: 700; font-size: 11px; padding: 7px 0; border-radius: 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-weight: 700; font-size: 10.5px; padding: 7px 0; border-radius: 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       transition: background 120ms ease, color 120ms ease;
     }
     .vtab.active { background: rgba(76,201,240,0.16); color: var(--accent); }
     .vtabs .preset-select { flex: 0 0 auto; margin-left: -2px; }
+    /* Duel: everything on one line — mode · New · variants · clock. The level bar is not used there. */
+    #app.duel .levelbar { display: none; }
+    #app.duel .controls { gap: 4px; }
+    #app.duel .vtabs { padding: 2px; gap: 1px; }
+    button.ctrl.mode-btn, button.ctrl.clock-btn { padding: 8px 7px; font-size: 11px; white-space: nowrap; }
+    button.ctrl.clock-btn { font-variant-numeric: tabular-nums; }
+    @media (max-width: 400px) { button.ctrl.mode-btn, button.ctrl.clock-btn { padding: 8px 5px; font-size: 10.5px; } #app.duel .vtab { font-size: 10px; } }
+    /* Option lists in the mode / clock popups */
+    .opt-list { display: flex; flex-direction: column; gap: 6px; }
+    .opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; background: var(--panel); border: 1px solid var(--grid-line); border-radius: 12px; padding: 10px 12px; color: var(--text); cursor: pointer; }
+    .opt b { font-size: 14px; } .opt small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .opt.active { border-color: var(--accent); background: rgba(76,201,240,0.10); }
+    .opt .tick { color: var(--accent); font-weight: 800; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 12px; }
+    .chip-btn { border: 1px solid var(--grid-line); background: var(--panel); color: var(--text); border-radius: 999px; padding: 7px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-variant-numeric: tabular-nums; }
+    .chip-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(76,201,240,0.12); }
+    .pick-note { font-size: 12px; color: var(--muted); line-height: 1.4; margin: 8px 0 2px; }
     .preset-select {
       flex: 0 0 auto; background: var(--panel); color: var(--text); border: 1px solid var(--grid-line);
       border-radius: 10px; padding: 0 3px; font-size: 11px; font-weight: 700; appearance: auto; max-width: 52px;
@@ -627,6 +644,7 @@
     </header>
 
     <div class="controls">
+      <button class="ctrl compact mode-btn" id="modeBtn" hidden title="Who you play">AI Easy ▾</button>
       <button class="ctrl" id="undoBtn">↶ Undo</button>
       <button class="ctrl" id="resetBtn">⟲ Reset</button>
       <div class="vtabs" id="duelVariants"></div>
@@ -637,6 +655,7 @@
       <button class="ctrl" id="nextBtn">Next ›</button>
       <button class="ctrl assist" id="hintBtn">Hint</button>
       <button class="ctrl assist" id="solveBtn">Solve</button>
+      <button class="ctrl compact clock-btn" id="clockBtn" hidden title="Time per player and increment per move">⏱ 60s</button>
     </div>
     <div class="duelbar" id="duelBar">
       <div class="duel-side A" id="duelSideA"><b class="duel-clock" id="clockA">1:00</b><span class="duel-name" id="duelNameA">Blue</span><span class="duel-score" id="scoreA">0</span><span class="trophy" id="trophyA" hidden>🏆</span></div>
@@ -860,6 +879,31 @@
         <p>Sharing isn't available in this browser — the report is copied below. Paste it into a message or email to the developer.</p>
         <textarea class="bug-text" id="bugFallbackText" rows="6" readonly></textarea>
       </div>
+    </div>
+  </div>
+
+  <div class="modal" role="dialog" aria-modal="true" id="modeModal">
+    <div class="modal-card">
+      <div class="modal-title"><span>Who do you play?</span><button class="ctrl" id="modeCloseBtn">Close</button></div>
+      <div class="opt-list" id="modeList"></div>
+    </div>
+  </div>
+
+  <div class="modal" role="dialog" aria-modal="true" id="clockModal">
+    <div class="modal-card">
+      <div class="modal-title"><span>Clock</span><button class="ctrl" id="clockCloseBtn">Close</button></div>
+      <div class="pick-note">Time per player for the whole game.</div>
+      <div class="chips" id="clockChips"></div>
+      <div class="pick-note"><b>Increment</b> — added to your clock after each of your moves.</div>
+      <div class="chips" id="incChips"></div>
+    </div>
+  </div>
+
+  <div class="modal" role="dialog" aria-modal="true" id="presetModal">
+    <div class="modal-card">
+      <div class="modal-title"><span>Filled board</span><button class="ctrl" id="presetCloseBtn">Close</button></div>
+      <div class="pick-note">How many grey cells the board starts with.</div>
+      <div class="chips" id="presetChips"></div>
     </div>
   </div>
 
@@ -2953,6 +2997,11 @@
   var shareBtn = document.getElementById('shareBtn');
   var replayGameBtn = document.getElementById('replayGameBtn');
   var trophyAEl = document.getElementById('trophyA');
+  var modeBtn = document.getElementById('modeBtn');
+  var clockBtn = document.getElementById('clockBtn');
+  var modeModalEl = document.getElementById('modeModal');
+  var clockModalEl = document.getElementById('clockModal');
+  var presetModalEl = document.getElementById('presetModal');
   var trophyBEl = document.getElementById('trophyB');
   var ratingChipEl = document.getElementById('ratingChip');
   var ratingValueEl = document.getElementById('ratingValue');
@@ -3288,12 +3337,13 @@
     { id: 'l', label: 'Lose', title: 'Lose puzzles in turns' }
   ];
   var OPPONENTS = [
-    { id: 'easy', label: 'Computer · Easy' },
-    { id: 'medium', label: 'Computer · Medium' },
-    { id: 'hard', label: 'Computer · Hard' },
-    { id: 'human', label: '2 players · same phone' },
-    { id: 'online', label: 'Online · invite / join' }
+    { id: 'easy', label: 'AI Easy', hint: 'Random legal moves.' },
+    { id: 'medium', label: 'AI Medium', hint: 'Leaves you the fewest placements.' },
+    { id: 'hard', label: 'AI Hard', hint: 'Searches several moves ahead.' },
+    { id: 'human', label: 'Pass & play', short: '2 players', hint: 'Two players, one phone.' },
+    { id: 'online', label: 'Online', hint: 'Invite a friend with a code, or join theirs.' }
   ];
+  function opponentInfo(id) { for (var i = 0; i < OPPONENTS.length; i++) if (OPPONENTS[i].id === id) return OPPONENTS[i]; return OPPONENTS[0]; }
   function duelVsComputer() { return duel.opponent !== 'human' && duel.opponent !== 'online'; }
   function isOnline() { return online.active; }
   // Which side is this device? A against the computer or on a shared phone
@@ -3488,6 +3538,7 @@
     clockSelectEl.innerHTML = '';
     CLOCK_OPTIONS.forEach(function (sec) { var o = document.createElement('option'); o.value = String(sec); o.textContent = clockLabel(sec); clockSelectEl.appendChild(o); });
     clockSelectEl.value = String(duelClockMs() / 1000);
+    if (typeof renderClockBtn === 'function' && !clockBtn.hidden) renderClockBtn();
   }
   var PUZZLE_AI_THINK_MS = { easy: 4000, medium: 3000, hard: 2000 };
   // Bonus time when a puzzle is solved, by its difficulty: Easy gives both
@@ -3685,9 +3736,11 @@
     duelSideBEl.classList.toggle('low', g.phase === 'play' && g.turn === 'B' && cB <= 10000);
     var left = g.pool.filter(function (p) { return !p.used; }).length;
     var tail = duelIsPuzzle() ? 'Puzzle ' + (g.levelIdx + 1) + '/' + g.levels.length + ' · ' + g.level().name : left + ' in pool';
-    if (g.phase === 'play') duelTurnEl.textContent = isMe(g.turn) ? 'Your move' : duelPlayerName(g.turn) + ' to move';
-    else if (g.phase === 'over') duelTurnEl.textContent = duelPlayerName(g.winner) + (g.winner === 'A' && duelVsComputer() ? ' win!' : ' wins!');
+    function barName(side) { return duelVsComputer() && side === 'B' ? 'CPU' : duelPlayerName(side); }
+    if (g.phase === 'play') duelTurnEl.textContent = isMe(g.turn) ? 'Your move' : barName(g.turn) + ' to move';
+    else if (g.phase === 'over') duelTurnEl.textContent = barName(g.winner) + (g.winner === 'A' && duelVsComputer() ? ' win!' : ' wins!');
     else duelTurnEl.textContent = isOnline() && !g.phase ? 'Not connected' : 'Drawing…';
+    renderClockBtn();
     trophyAEl.hidden = !(g.phase === 'over' && g.winner === 'A');
     trophyBEl.hidden = !(g.phase === 'over' && g.winner === 'B');
     duel.puzzleTail = duelIsPuzzle() ? tail : '';
@@ -3847,8 +3900,9 @@
     diffTag.hidden = true;
     duelBarEl.classList.add('show');
     undoBtn.hidden = true; nextBtn.hidden = true; hintBtn.hidden = true; solveBtn.hidden = true;
-    resetBtn.textContent = '↻ New game';
+    resetBtn.textContent = 'New';
     resetBtn.classList.add('compact');
+    appEl.classList.add('duel'); modeBtn.hidden = false; clockBtn.hidden = false;
     scoreDisplayEl.classList.remove('show');
     settingsBarEl.hidden = true;
     stopLiveScoreClock();
@@ -3861,6 +3915,7 @@
     buildIncSelect();
     clockSelectEl.hidden = false; incSelectEl.hidden = false; mapBtn.hidden = true;
     renderRating(0);
+    renderModeBtn(); renderClockBtn();
     renderVariantTabs();
     duelVariantsEl.classList.add('show');
     if (duel.opponent === 'online') { onlineSetup(); return; }
@@ -3872,9 +3927,9 @@
     VARIANTS.forEach(function (v) {
       var b = document.createElement('button');
       b.className = 'vtab' + (v.id === duel.variant ? ' active' : '');
-      b.textContent = v.label; b.title = v.title; b.setAttribute('data-variant', v.id);
+      b.textContent = v.id === 'b' && duel.variant === 'b' ? 'Filled ' + duelBPresets() : v.label; b.title = v.title; b.setAttribute('data-variant', v.id);
       b.addEventListener('click', function () {
-        if (duel.variant === v.id) return;
+        if (duel.variant === v.id) { if (v.id === 'b') openPresetPicker(); return; }
         if (isOnline() && online.side === 'B') { guestSend({ t: 'variant', v: v.id }); return; }
         duel.variant = v.id; setPref('bb_duel_variant', v.id);
         resetDuelScore(); renderVariantTabs();
@@ -3882,9 +3937,8 @@
         restartDuel('A');
       });
       duelVariantsEl.appendChild(b);
-      if (v.id === 'b') duelVariantsEl.appendChild(presetSelectEl); // the dropdown sits right after B
     });
-    presetSelectEl.hidden = duel.variant !== 'b';
+    presetSelectEl.hidden = true; // the count is picked from the Filled tab's popup
     presetSelectEl.value = String(duelBPresets());
     if (clockSelectEl.options.length) clockSelectEl.value = String(duelClockMs() / 1000);
     if (incSelectEl.options.length) incSelectEl.value = String(duelIncMs() / 1000);
@@ -4131,7 +4185,7 @@
     if (duel.countdownTimer) { clearInterval(duel.countdownTimer); duel.countdownTimer = null; }
     if (duel.variant !== msg.variant) { duel.variant = msg.variant; renderVariantTabs(); }
     msg.presets = clampPresets(msg.presets);
-    if (String(duelBPresets()) !== String(msg.presets)) { setPref('bb_duel_presets', String(msg.presets)); presetSelectEl.value = String(msg.presets); }
+    if (String(duelBPresets()) !== String(msg.presets)) { setPref('bb_duel_presets', String(msg.presets)); presetSelectEl.value = String(msg.presets); renderVariantTabs(); }
     if (msg.clock && String(duelClockMs() / 1000) !== String(msg.clock)) { setPref('bb_duel_clock', String(msg.clock)); clockSelectEl.value = String(msg.clock); }
     if (msg.inc !== undefined && String(duelIncMs() / 1000) !== String(msg.inc)) { setPref('bb_duel_inc', String(msg.inc)); incSelectEl.value = String(msg.inc); }
     duel.score = msg.score; duel.lastStarter = msg.lastStarter;
@@ -4190,7 +4244,7 @@
     if (msg.t === 'variant') { if (VARIANTS.some(function (v) { return v.id === msg.v; })) { duel.variant = msg.v; setPref('bb_duel_variant', msg.v); resetDuelScore(); renderVariantTabs(); restartDuel('B'); } return; }
     if (msg.t === 'inc') { if (INC_OPTIONS.indexOf(parseInt(msg.s, 10)) !== -1) { setPref('bb_duel_inc', String(parseInt(msg.s, 10))); incSelectEl.value = String(parseInt(msg.s, 10)); restartDuel('B'); } return; }
     if (msg.t === 'clock') { if (CLOCK_OPTIONS.indexOf(parseInt(msg.s, 10)) !== -1) { setPref('bb_duel_clock', String(parseInt(msg.s, 10))); clockSelectEl.value = String(parseInt(msg.s, 10)); restartDuel('B'); } return; }
-    if (msg.t === 'presets') { setPref('bb_duel_presets', String(clampPresets(msg.n))); presetSelectEl.value = String(duelBPresets()); if (duel.variant === 'b') restartDuel('B'); return; }
+    if (msg.t === 'presets') { setPref('bb_duel_presets', String(clampPresets(msg.n))); presetSelectEl.value = String(duelBPresets()); renderVariantTabs(); if (duel.variant === 'b') restartDuel('B'); return; }
   }
   function guestSend(obj) { if (isOnline() && online.side === 'B' && online.link) online.link.send(obj); }
   // The guest's clocks tick locally between snapshots.
@@ -4218,6 +4272,7 @@
     undoBtn.hidden = false; nextBtn.hidden = false; hintBtn.hidden = false; solveBtn.hidden = false;
     resetBtn.textContent = '⟲ Reset';
     resetBtn.classList.remove('compact');
+    appEl.classList.remove('duel'); modeBtn.hidden = true; clockBtn.hidden = true;
     settingsBarEl.hidden = !scoreEnabled;
     scoreDisplayEl.classList.toggle('show', scoreEnabled);
   }
@@ -6216,14 +6271,59 @@
   Array.prototype.forEach.call(document.querySelectorAll('.modetab'), function (t) {
     t.addEventListener('click', function () { switchMode(t.getAttribute('data-mode')); });
   });
+  function chooseOpponent(id) {
+    var was = duel.opponent;
+    duel.opponent = id; setPref('bb_duel_opp', id); resetDuelScore();
+    levelSelect.value = id; renderModeBtn();
+    if (was === 'online' && id !== 'online') { leaveOnline(); onlinePanelEl.hidden = true; }
+    if (id === 'online') { onlineSetup(); return; }
+    newDuel();
+  }
+  function renderModeBtn() { var o = opponentInfo(duel.opponent); modeBtn.textContent = (o.short || o.label) + ' ▾'; }
+  function renderClockBtn() { var inc = duelIncMs() / 1000; clockBtn.textContent = '⏱ ' + clockLabel(duelClockMs() / 1000) + (inc ? ' +' + inc + 's' : ''); }
+  function openModePicker() {
+    var list = document.getElementById('modeList'); list.innerHTML = '';
+    OPPONENTS.forEach(function (o) {
+      var b = document.createElement('button'); b.className = 'opt' + (o.id === duel.opponent ? ' active' : ''); b.setAttribute('data-opp', o.id);
+      b.innerHTML = '<span><b></b><small></small></span><span class="tick">' + (o.id === duel.opponent ? '✓' : '') + '</span>';
+      b.querySelector('b').textContent = o.label; b.querySelector('small').textContent = o.hint;
+      b.addEventListener('click', function () { closeModal(modeModalEl); if (o.id !== duel.opponent) chooseOpponent(o.id); });
+      list.appendChild(b);
+    });
+    openModal(modeModalEl);
+  }
+  function openPresetPicker() {
+    var pc = document.getElementById('presetChips'); pc.innerHTML = '';
+    var cur = duelBPresets();
+    PRESET_OPTIONS.forEach(function (n) {
+      var b = document.createElement('button'); b.className = 'chip-btn' + (n === cur ? ' active' : ''); b.textContent = String(n); b.setAttribute('data-preset', String(n));
+      b.addEventListener('click', function () { closeModal(presetModalEl); if (n !== cur) { presetSelectEl.value = String(n); presetSelectEl.dispatchEvent(new Event('change')); renderVariantTabs(); } });
+      pc.appendChild(b);
+    });
+    openModal(presetModalEl);
+  }
+  function openClockPicker() {
+    var cc = document.getElementById('clockChips'), ic = document.getElementById('incChips'); cc.innerHTML = ''; ic.innerHTML = '';
+    var curClock = duelClockMs() / 1000, curInc = duelIncMs() / 1000;
+    CLOCK_OPTIONS.forEach(function (sec) {
+      var b = document.createElement('button'); b.className = 'chip-btn' + (sec === curClock ? ' active' : ''); b.textContent = clockLabel(sec); b.setAttribute('data-clock', String(sec));
+      b.addEventListener('click', function () { closeModal(clockModalEl); if (sec !== curClock) { clockSelectEl.value = String(sec); clockSelectEl.dispatchEvent(new Event('change')); } });
+      cc.appendChild(b);
+    });
+    INC_OPTIONS.forEach(function (sec) {
+      var b = document.createElement('button'); b.className = 'chip-btn' + (sec === curInc ? ' active' : ''); b.textContent = sec ? '+' + sec + 's' : 'no inc'; b.setAttribute('data-inc', String(sec));
+      b.addEventListener('click', function () { closeModal(clockModalEl); if (sec !== curInc) { incSelectEl.value = String(sec); incSelectEl.dispatchEvent(new Event('change')); } });
+      ic.appendChild(b);
+    });
+    openModal(clockModalEl);
+  }
+  modeBtn.addEventListener('click', openModePicker);
+  clockBtn.addEventListener('click', openClockPicker);
+  bindModalClose(modeModalEl, document.getElementById('modeCloseBtn'));
+  bindModalClose(clockModalEl, document.getElementById('clockCloseBtn'));
+  bindModalClose(presetModalEl, document.getElementById('presetCloseBtn'));
   levelSelect.addEventListener('change', function () {
-    if (currentMode === 'duel') {
-      var was = duel.opponent;
-      duel.opponent = levelSelect.value; setPref('bb_duel_opp', duel.opponent); resetDuelScore();
-      if (was === 'online' && duel.opponent !== 'online') { leaveOnline(); onlinePanelEl.hidden = true; }
-      if (duel.opponent === 'online') { onlineSetup(); return; }
-      newDuel(); return;
-    }
+    if (currentMode === 'duel') { chooseOpponent(levelSelect.value); return; }
     loadLevel(parseInt(levelSelect.value, 10));
   });
   undoBtn.addEventListener('click', undo);
@@ -6348,7 +6448,7 @@
     if (popupEl.classList.contains('show')) { hidePiecePopup(); return true; }
     if (drag) { exitCarryModeIfAny(); return true; }
     if (!resultCardEl.hidden) { hideResultCard(); return true; }
-    var modals = [bugModalEl, inboxModalEl, progressModalEl, tutorialModalEl, mapModalEl, document.getElementById('builderModal'), document.getElementById('adminModal'), settingsModalEl];
+    var modals = [modeModalEl, clockModalEl, presetModalEl, bugModalEl, inboxModalEl, progressModalEl, tutorialModalEl, mapModalEl, document.getElementById('builderModal'), document.getElementById('adminModal'), settingsModalEl];
     for (var i = 0; i < modals.length; i++) {
       if (modals[i] && modals[i].classList.contains('show')) { closeModal(modals[i]); return true; }
     }
@@ -6432,6 +6532,9 @@
       incMs: function () { return duelIncMs(); },
       myTurn: isMyTurnNow,
       trayLock: function () { return trayEl.style.maxHeight; },
+      setOpponent: chooseOpponent,
+      setClock: function (sec) { clockSelectEl.value = String(sec); clockSelectEl.dispatchEvent(new Event('change')); },
+      setInc: function (sec) { incSelectEl.value = String(sec); incSelectEl.dispatchEvent(new Event('change')); },
       duelBar: function () { return { turn: duelTurnEl.textContent, trophyA: !trophyAEl.hidden, trophyB: !trophyBEl.hidden, lines: duelTurnEl.textContent.split('\n').length }; },
       lift: function (e) { return liftFor(e, 40); },
       fits: function () { return { fits: appEl.classList.contains('fits'), tooTall: pageTooTall(), bufferShown: !!(bufferEl && bufferEl.offsetHeight), scrollH: document.documentElement.scrollHeight, innerH: window.innerHeight, overflow: getComputedStyle(document.documentElement).overflow, cell: getComputedStyle(document.documentElement).getPropertyValue('--cell').trim(), touch: getComputedStyle(appEl).touchAction }; },

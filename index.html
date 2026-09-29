@@ -56,6 +56,14 @@
                calc(40px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px));
       display: flex; flex-direction: column; align-items: center; gap: 10px;
     }
+    /* Once everything fits the screen, a finger anywhere on the page (the gap
+       between board and tray included) must not pan it. Modals scroll on their own. */
+    #app.fits { touch-action: none; }
+    /* Short screens: less air between rows so the board and the pool both stay on screen. */
+    #app.tight { gap: 6px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+    #app.tight .status { min-height: 30px; font-size: 12px; }
+    #app.tight .duelbar { padding: 4px 6px; }
+    #app.tight .levelbar { margin-top: 4px; }
     header { text-align: center; width: 100%; }
     .modebar {
       display: flex; align-items: center; gap: 6px; width: 100%;
@@ -85,14 +93,14 @@
     .map-tabs button { flex: 1; }
     .map-tabs button.active { background: rgba(76,201,240,0.16); border-color: var(--accent); color: var(--accent); }
     .daily-card { background: linear-gradient(135deg, rgba(76,201,240,0.16), rgba(199,125,255,0.14)); border: 1px solid rgba(76,201,240,0.4); border-radius: 14px; padding: 12px; margin-bottom: 12px; }
-    .daily-line { display: flex; align-items: center; gap: 8px; }
-    .daily-line > span { font-size: 11px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; flex: 0 0 auto; max-width: 78px; line-height: 1.2; }
-    .daily-box b { white-space: nowrap; }
-    .daily-box { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--panel); border: 1px solid var(--grid-line); border-radius: 10px; padding: 7px 6px; cursor: pointer; font-weight: 800; font-size: 13px; color: var(--text); }
-    .daily-box.done { border-color: rgba(128,237,153,0.6); }
-    .daily-box .leveltag { font-size: 10px; padding: 2px 7px; }
-    .daily-box small { font-size: 10px; color: var(--muted); font-weight: 700; }
-    .daily-other { flex: 0 0 auto; padding: 8px 9px; font-size: 11px; }
+    .daily-boxes { display: flex; gap: 10px; margin-top: 8px; }
+    .daily-box { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--panel); border: 1px solid var(--grid-line); border-radius: 12px; padding: 12px 8px; cursor: pointer; color: var(--text); }
+    .daily-box b { font-size: 17px; font-weight: 800; white-space: nowrap; }
+    .daily-box small { font-size: 12px; color: var(--muted); font-weight: 700; white-space: nowrap; }
+    .daily-box .leveltag { font-size: 11px; padding: 3px 9px; margin-top: 2px; }
+    .daily-box.done { border-color: rgba(128,237,153,0.7); background: rgba(128,237,153,0.08); }
+    .daily-box:hover { border-color: var(--accent); }
+    .daily-other { flex: 0 0 auto; padding: 7px 10px; font-size: 11px; }
     .daily-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
     .daily-head b { font-size: 16px; }
     .daily-head span { font-size: 12px; color: var(--muted); font-weight: 700; }
@@ -3409,6 +3417,7 @@
     duel.replayLog = []; replayRecord(null); if (duel.replayTimer) { clearTimeout(duel.replayTimer); duel.replayTimer = null; } duel.replaying = false;
     renderBoard(); renderTray();
     relockTray();
+    updateFits();
     updateDuelBar();
     logEvent('duel_start', { opp: duel.opponent, starter: g.starter, passed: g.starter !== g.drawn });
     // The bar already says whose move it is; only say something extra when it helps.
@@ -4431,18 +4440,20 @@
     mapBodyEl.innerHTML = '';
     // daily card
     var k = mapDailyKey || dailyKey(), card = document.createElement('div'); card.className = 'daily-card';
-    var line = document.createElement('div'); line.className = 'daily-line';
-    var lbl = document.createElement('span'); lbl.textContent = k === dailyKey() ? 'Puzzle of the day' : DAILY.prettyDate(k); line.appendChild(lbl);
+    var head = document.createElement('div'); head.className = 'daily-head';
+    var lbl = document.createElement('b'); lbl.textContent = k === dailyKey() ? 'Puzzle of the day' : 'Puzzle of ' + DAILY.prettyDate(k); head.appendChild(lbl);
+    var line = document.createElement('div'); line.className = 'daily-boxes';
     ['survive', 'lose'].forEach(function (m) {
       var lvl = dailyLevel(m, k), done = dailyIsDone(k, m);
       var box = document.createElement('button'); box.className = 'daily-box' + (done ? ' done' : ''); box.setAttribute('data-daily', m);
-      box.innerHTML = '<b>' + (m === 'lose' ? 'Lose' : 'Survive') + ' #' + DAILY.number(k) + (done ? ' ✓' : '') + '</b>' + (lvl ? '<span class="leveltag ' + lvl.difficulty + '">' + lvl.difficulty + '</span>' : '<small>unavailable</small>');
+      box.innerHTML = '<b>' + (m === 'lose' ? 'Lose' : 'Survive') + '</b><small>#' + DAILY.number(k) + (done ? ' · solved ✓' : '') + '</small>' + (lvl ? '<span class="leveltag ' + lvl.difficulty + '">' + lvl.difficulty + '</span>' : '<small>unavailable</small>');
       box.addEventListener('click', function () { playDaily(m, k); });
       line.appendChild(box);
     });
     var other = document.createElement('button'); other.className = 'ctrl daily-other'; other.id = 'dailyOtherBtn'; other.textContent = mapDailyOpen ? 'Hide' : 'Other days';
     other.addEventListener('click', function () { mapDailyOpen = !mapDailyOpen; renderMap(mapMode); });
-    line.appendChild(other);
+    head.appendChild(other);
+    card.appendChild(head);
     card.appendChild(line);
     if (mapDailyOpen) {
       var cal = document.createElement('div'); cal.className = 'daily-cal';
@@ -4554,6 +4565,7 @@
     relockTray();
     setStatus('', false);
     maybeStartTutorial();
+    updateFits();
     return true;
   }
 
@@ -4728,6 +4740,7 @@
     var wasShown = tutorialBarEl.classList.contains('show');
     tutorialActive = false; tutorialMode = null;
     tutorialBarEl.classList.remove('show');
+    setTimeout(updateFits, 0);
     // Skipped while the level / game is still on: keep the strip's space so
     // the board doesn't jump. A new level or game clears it.
     if (wasShown && keepSpace) tutorialBarEl.classList.add('reserved'); else if (!keepSpace) tutorialBarEl.classList.remove('reserved');
@@ -5949,12 +5962,36 @@
   boardEl.addEventListener('pointerdown', onBoardPointerDown);
 
   // ---------- Responsive ----------
+  // The board is sized to the width, then shrunk until the whole screen
+  // (header, controls, board, tray, status) fits the viewport height, so the
+  // page never needs to scroll — and then it is told not to pan at all
+  // (#app.fits → touch-action: none), which is what stops a finger in the
+  // gap between the board and the tray from dragging the page around.
+  var appEl = document.getElementById('app');
+  var bufferEl = document.getElementById('bottomBuffer');
+  function pageTooTall() {
+    var extra = bufferEl ? bufferEl.offsetHeight : 0;
+    return document.documentElement.scrollHeight - extra > window.innerHeight + 2;
+  }
   function fitCellSize() {
     var maxBoard = Math.min(window.innerWidth - 28, 460);
     var size = Math.floor((maxBoard - 4 * 9) / 8);
     size = Math.max(28, Math.min(54, size));
-    document.documentElement.style.setProperty('--cell', size + 'px');
+    // measure against the tray at its natural height, not a lock from the previous level
+    trayEl.style.minHeight = ''; trayEl.style.maxHeight = '';
+    appEl.classList.remove('tight');
+    function apply(px) { document.documentElement.style.setProperty('--cell', px + 'px'); if (typeof pieces !== 'undefined' && pieces.length) fitTraySize(); }
+    apply(size);
+    for (var i = 0; i < 14 && size > 28 && pageTooTall(); i++) { size -= 2; apply(size); }
+    // Still too tall (Duel's extra rows on a short screen): tighten the
+    // spacing and allow a smaller board before giving up on the no-pan rule.
+    if (pageTooTall()) {
+      appEl.classList.add('tight'); apply(size);
+      for (var j = 0; j < 4 && size > 22 && pageTooTall(); j++) { size -= 2; apply(size); }
+    }
+    updateFits();
   }
+  function updateFits() { appEl.classList.toggle('fits', !pageTooTall()); }
 
   // ---------- Controls / modes ----------
   // Rebuilt after every win so lock/won marks stay current. Premium sees
@@ -5997,9 +6034,10 @@
     });
     currentLevelId = null;
     lockReason = null;
-    if (mode === 'duel') { enterDuelMode(); return; }
+    if (mode === 'duel') { enterDuelMode(); fitCellSize(); relockTray(); return; }
     modeLevels = levelsForMode(mode);
     buildLevelSelect();
+    fitCellSize();
     var target = idx !== undefined ? idx : (lastIndex[mode] || 0);
     if (target >= modeLevels.length) target = 0;
     if (!loadLevel(target) && target !== 0) loadLevel(0); // remembered level got locked (premium off) → start
@@ -6340,6 +6378,7 @@
       incMs: function () { return duelIncMs(); },
       myTurn: isMyTurnNow,
       trayLock: function () { return trayEl.style.maxHeight; },
+      fits: function () { return { fits: appEl.classList.contains('fits'), tooTall: pageTooTall(), cell: getComputedStyle(document.documentElement).getPropertyValue('--cell').trim(), touch: getComputedStyle(appEl).touchAction }; },
       streak: function () { return clearStreak; },
       jump: function (i) { return loadLevel(i); },
       daily: function () { var lvl = modeLevels[modeIndex]; return { key: dailyKey(), done: dailyDone(), streak: dailyStreak(), current: lvl && lvl.daily ? { id: lvl.id, key: lvl.key, mode: lvl.mode, solutions: lvl.solutions, difficulty: lvl.difficulty, board: lvl.board, pieces: lvl.pieces } : null }; },

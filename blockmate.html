@@ -52,8 +52,10 @@
     #app {
       max-width: 520px; margin: 0 auto;
       /* Keep clear of the camera notch and the gesture bar inside the app shell. */
+      /* The bottom padding is a safety margin: picking a piece right at the screen's edge would
+         start the phone's swipe-up gesture, so the pool never reaches the edge. */
       padding: calc(16px + env(safe-area-inset-top, 0px)) calc(14px + env(safe-area-inset-right, 0px))
-               calc(40px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px));
+               calc(34px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px));
       display: flex; flex-direction: column; align-items: center; gap: 10px;
     }
     /* Once everything fits the screen, a finger anywhere on the page (the gap
@@ -63,7 +65,7 @@
     #app.fits .bottom-buffer { display: none; }
     html.fits-page, html.fits-page body { overflow: hidden; height: 100%; }
     /* Short screens: less air between rows so the board and the pool both stay on screen. */
-    #app.tight { gap: 6px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+    #app.tight { gap: 6px; padding-bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
     #app.tight .duelbar { padding: 4px 6px; }
     #app.tight .levelbar { margin-top: 4px; }
     header { text-align: center; width: 100%; }
@@ -3808,7 +3810,7 @@
     var vsSomeone = duelVsComputer() || isOnline();
     if (youWon || !vsSomeone) { boardEl.classList.add('solved'); playWinSound(); } else playFailSound();
     var title = duelVsComputer() ? (youWon ? 'You win!' : 'Computer wins') : duelPlayerName(g.winner) + ' wins!';
-    setStatus(title + ' — ' + why, !youWon && (duelVsComputer() || isOnline()));
+    setStatus(title, !youWon && (duelVsComputer() || isOnline()));
     showDuelResultCard(g, title, why, youWon, rDelta);
     broadcast();
   }
@@ -5272,7 +5274,7 @@
     var target = nextTarget();
     var next = !target ? 'That was the last level here — pick another from Jump to.' :
       target.mode !== currentMode ? 'Tap the board for the next ' + (target.mode === 'lose' ? 'Lose' : 'Survive') + ' level.' : 'Tap the board for the next level.';
-    setStatus(title + ' — ' + solMsg + ' ' + next, false);
+    setStatus(title, false);
     logEvent('win', { mode: currentMode, id: lvl.id, newSolution: isNewSolution, found: found, score: lastStageResult ? lastStageResult.finalScore : null });
     var elapsed = Date.now() - levelStartTime, perfect = !hintsUsed && !resetCount && !rewindsUsed;
     var acts = [];
@@ -5304,7 +5306,7 @@
     logEvent('fail', { mode: currentMode, id: modeLevels[modeIndex] ? modeLevels[modeIndex].id : null });
     failStreak += 1;
     if (failStreak >= 2 && hintPulseEnabled()) setHintPulse(true);
-    setStatus(title + ' — ' + sub, true);
+    setStatus(title, true);
     var lvl = modeLevels[modeIndex];
     var blame = blameMove();
     var why = !blame ? 'This one needs a different plan from the first move.'
@@ -6084,6 +6086,7 @@
     if (mode === 'duel') { enterDuelMode(); fitCellSize(); relockTray(); return; }
     modeLevels = levelsForMode(mode);
     buildLevelSelect();
+    settingsBarEl.hidden = !scoreEnabled; // the score row only exists when the readout is on
     fitCellSize();
     var target = idx !== undefined ? idx : (lastIndex[mode] || 0);
     if (target >= modeLevels.length) target = 0;

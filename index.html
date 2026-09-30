@@ -229,6 +229,8 @@
       touch-action: none;
     }
     #tray.two-rows { flex-wrap: wrap; row-gap: calc(var(--tray-cell, var(--cell)) * 0.35); }
+    #tray.packed { flex-direction: column; flex-wrap: nowrap; align-items: center; }
+    .tray-row { display: flex; gap: calc(var(--tray-cell, var(--cell)) * 0.25); align-items: flex-end; justify-content: center; }
     .tray-piece {
       display: grid; gap: calc(var(--tray-cell, var(--cell)) * 0.06); cursor: grab; touch-action: none;
       padding: calc(var(--tray-cell, var(--cell)) * 0.12); border-radius: 10px;
@@ -2217,8 +2219,11 @@
   var N = 8;
 
   var DEFAULTS = {
-    poolSize: 10,
-    refillSize: 4,
+    // 11 and 5 (odd, decided 2026-10-01): with even sizes the starter faced
+    // every refill and won ~71-88% of symmetric games; odd batches alternate
+    // who faces the lottery — measured 45% (medium) / 50% (hard).
+    poolSize: 11,
+    refillSize: 5,
     clockMs: 60000,
     bonusMs: 10000,
     // The first move is worth a lot (the first mover won ~73% of symmetric
@@ -3202,10 +3207,28 @@
     return duel.game.batchStart || 0;
   }
   function trayPiecesShown() { return pieces.slice(trayBatchStart()); }
+  // A big pool (a duel deal) is packed into two rows of about equal width:
+  // widest pieces first, each into the shorter row, then each row back in
+  // deal order. Rows are explicit elements, so the browser never re-wraps
+  // them and the cell size can be computed from the wider row exactly.
+  // Packing is a function of the batch alone, so it never changes mid-batch.
+  function packRows(from) {
+    var idxs = []; for (var i = from; i < pieces.length; i++) idxs.push(i);
+    var byWidth = idxs.slice().sort(function (a, b) { return trayPieceWidth(pieces[b], 1) - trayPieceWidth(pieces[a], 1) || a - b; });
+    var rows = [[], []], width = [0, 0];
+    byWidth.forEach(function (idx) { var r = width[0] <= width[1] ? 0 : 1; rows[r].push(idx); width[r] += trayPieceWidth(pieces[idx], 1) + 0.25; });
+    rows.forEach(function (row) { row.sort(function (a, b) { return a - b; }); });
+    return rows;
+  }
   function renderTray() {
     trayEl.innerHTML = '';
     var from = trayBatchStart();
     var queued = premoveIdxSet();
+    var packed = pieces.length - from >= TRAY_TWO_ROWS_AT;
+    trayEl.classList.toggle('packed', packed);
+    trayEl._rows = packed ? packRows(from) : null;
+    var rowEls = null;
+    if (packed) { rowEls = trayEl._rows.map(function () { var r = document.createElement('div'); r.className = 'tray-row'; trayEl.appendChild(r); return r; }); }
     pieces.forEach(function (p, idx) {
       if (idx < from) return;
       var wrap = document.createElement('div');
@@ -3220,7 +3243,7 @@
         }
       if (queued[idx] && premoveList().length > 1) wrap.setAttribute('data-pm', String(premoveIndexOf(idx) + 1));
       if (!p.used) attachDrag(wrap, idx); // a queued piece drags again with its number (see beginPointer)
-      trayEl.appendChild(wrap);
+      if (rowEls) rowEls[trayEl._rows[0].indexOf(idx) !== -1 ? 0 : 1].appendChild(wrap); else trayEl.appendChild(wrap);
     });
     fitTraySize();
   }
@@ -3276,9 +3299,12 @@
       return;
     }
     trayEl.classList.add('two-rows');
-    // Two rows: start from "half the total width per row" and confirm by
+    // Two rows: packed rows are known exactly (the wider one sets the cell);
+    // otherwise start from "half the total width per row". Then confirm by
     // measuring, shrinking a step at a time until it really is two rows.
-    var c = Math.min(Math.round(baseCell * trayScale), Math.floor(baseCell * avail / (trayRowWidth(unused, baseCell) / 2 + 0.25 * baseCell * 2)));
+    var rows = trayEl._rows;
+    var widest = rows ? Math.max(trayRowWidth(rows[0].map(function (i) { return pieces[i]; }), baseCell), trayRowWidth(rows[1].map(function (i) { return pieces[i]; }), baseCell)) : trayRowWidth(unused, baseCell) / 2 + 0.25 * baseCell * 2;
+    var c = Math.min(Math.round(baseCell * trayScale), Math.floor(baseCell * avail / widest));
     c = Math.max(TRAY_MIN_CELL, c);
     setTrayCell(c);
     for (var i = 0; i < 14 && c > TRAY_MIN_CELL; i++) {
@@ -3920,7 +3946,7 @@
     feelMove({ placed: cellsPlaced, clearedCount: clearedIdx.length, cleared: clearedIdx, clearedColors: clearedCol, lines: res.cleared || 0 }, DUEL_COLORS[side]);
     if (res.cleared > 0) playClearSound(res.cleared, clearStreak); else playPlaceSound();
     if (res.refilled) relockTray(); // a new batch: the box fits it, not the ten before
-    if (res.refilled) setStatus('Refill: 4 new pieces' + (res.bonus ? ' · +10 s each' : '') + (res.incrementMs ? ' · +' + (res.incrementMs / 1000) + ' s for the move' : '') + '.', false);
+    if (res.refilled) setStatus('Refill: ' + g.cfg.refillSize + ' new pieces' + (res.bonus ? ' · +10 s each' : '') + (res.incrementMs ? ' · +' + (res.incrementMs / 1000) + ' s for the move' : '') + '.', false);
     else setStatus('', false);
     if (res.over) { duelEnd(); return true; }
     updateDuelBar();
@@ -4959,7 +4985,7 @@
     } else if (g.refills === 0) {
       t = 'Whoever can\'t place a piece on their turn loses — so does anyone whose clock hits 0. Keep room open.';
     } else {
-      t = 'Pool empty → 4 new pieces for both' + (g.refills === 1 ? ', and +10 s once' : '') + '. Keep going until someone is stuck.';
+      t = 'Pool empty → ' + g.cfg.refillSize + ' new pieces for both' + (g.refills === 1 ? ', and +10 s once' : '') + '. Keep going until someone is stuck.';
     }
     tutorialTextEl.textContent = t;
   }

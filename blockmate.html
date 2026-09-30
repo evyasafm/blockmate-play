@@ -2349,6 +2349,9 @@
     g.dealOne = dealOne;
     g.dealRefill = dealRefill;
     g.refillDealerFor = refillDealerFor;
+    g.refillDealerForEmpty = function (n) { return n >= cfg.bigRefillMinEmpty ? dealOne : dealRefill; };
+    // Dealers on a private random stream, so an AI sampling refills doesn't move the game's own dice.
+    g.samplingDealers = function (rng2) { var one = makeDealer(shapes, keys, rng2, opts.weight || defaultWeight), small = makeDealer(shapes, keys, rng2, refillWeight); return function (empty) { return empty >= cfg.bigRefillMinEmpty ? one : small; }; };
     g.emptyCells = function () { return emptyCells(g.grid); };
 
     function other(p) { return p === 'A' ? 'B' : 'A'; }
@@ -2442,10 +2445,8 @@
   //   easy:   a random legal move.
   //   medium: greedy — the move after which the opponent has the fewest
   //           placements (immediate win if zero), random tie-break.
-  //   hard:   greedy + one reply of lookahead over the best few candidates:
-  //           assume the opponent answers with the reply that leaves us the
-  //           fewest placements, and pick the candidate whose worst case is
-  //           best (a reply that strands us outright is the worst case).
+  //   hard:   a real search — bitboards, iterative deepening, alpha-beta,
+  //           transposition table, ~150 ms per move (see deepMove below).
   // The pool is shared, so "opponent mobility" is really "mobility of
   // whoever moves next with these pieces". When a move empties the pool the
   // refill is unknown: the evaluation samples several refills from the
@@ -2481,7 +2482,7 @@
     return next;
   }
 
-  function chooseMove(game, level, rng) {
+  function chooseMove(game, level, rng, opts) {
     rng = rng || Math.random;
     var grid = game.grid, pool = game.pool;
     var moves = legalMoves(grid, pool);
@@ -2504,32 +2505,10 @@
       return scored[0].mv;
     }
 
-    // hard: pruned negamax. The game is really "who takes the last move
-    // that fits", so the search goes deeper — at full width — as the
-    // position tightens and the branching factor collapses; early on it
-    // looks 3 plies ahead over the best-looking moves. A node whose mover
-    // has no legal move is a loss for that mover. Leaves score the mover's
-    // mobility. The refill, when a move empties the pool, is one sample
-    // from the game's dealer.
-    var plan = searchPlan(moves.length);
-    var best = null, bestScore = -Infinity;
-    var K = Math.min(plan.width, scored.length);
-    for (var i = 0; i < K; i++) {
-      var cand = scored[i];
-      var v = -negamax(game, cand.grid, refilled(game, cand.grid, cand.pool), plan.depth - 1, rng);
-      if (v > bestScore) { bestScore = v; best = cand.mv; }
-    }
-    return best || scored[0].mv;
+    return deepMove(game, rng, opts && opts.budgetMs);
   }
 
   var BIG = 100000;
-  function searchPlan(branching) {
-    if (branching <= 10) return { depth: 7, width: 10 };
-    if (branching <= 25) return { depth: 5, width: 9 };
-    if (branching <= 80) return { depth: 4, width: 8 };
-    return { depth: 3, width: 8 };
-  }
-
   // Value of the position for the player about to move on `grid` with `pool`.
   function negamax(game, grid, pool, depth, rng) {
     var moves = legalMoves(grid, pool);
@@ -2542,13 +2521,149 @@
     });
     scored.sort(function (a, b) { return (a.opp - b.opp) || (a.tie - b.tie); });
     if (scored[0].opp === 0 && !exhausted(scored[0].pool)) return BIG + depth; // we can strand them now
-    var plan = searchPlan(moves.length);
-    var best = -Infinity, K = Math.min(plan.width, scored.length);
+    var best = -Infinity, K = Math.min(8, scored.length);
     for (var i = 0; i < K; i++) {
       var v = -negamax(game, scored[i].grid, refilled(game, scored[i].grid, scored[i].pool), depth - 1, rng);
       if (v > best) best = v;
     }
     return best;
+  }
+
+  // ---------- hard: bitboard search ----------
+  // The board is two 32-bit masks (rows 0-3 in `lo`, rows 4-7 in `hi`) and
+  // every piece's placements are precomputed masks, so a node costs a few
+  // dozen AND/ORs instead of array walks. That buys depth: iterative
+  // deepening with alpha-beta and a transposition table, within a time
+  // budget, and the game's first ten pieces are usually searched to the
+  // end from the third or fourth move on. Refills are the one unknown: a
+  // child that empties the pool is scored by the average over sampled
+  // refills from the game's own dealer (stuck = a loss), not searched.
+  var maskCache = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+  function masksFor(matrix) {
+    var hit = maskCache && maskCache.get(matrix);
+    if (hit) return hit;
+    var out = [], h = matrix.length, w = matrix[0].length;
+    for (var top = 0; top <= N - h; top++) for (var left = 0; left <= N - w; left++) {
+      var lo = 0, hi = 0;
+      for (var r = 0; r < h; r++) for (var c = 0; c < w; c++) if (matrix[r][c]) {
+        var rr = top + r, bit = 1 << ((rr & 3) * 8 + left + c);
+        if (rr < 4) lo |= bit; else hi |= bit;
+      }
+      out.push({ lo: lo, hi: hi, top: top, left: left });
+    }
+    if (maskCache) maskCache.set(matrix, out);
+    return out;
+  }
+  function gridBits(grid) {
+    var lo = 0, hi = 0;
+    for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) if (grid[r][c]) { var bit = 1 << ((r & 3) * 8 + c); if (r < 4) lo |= bit; else hi |= bit; }
+    return { lo: lo, hi: hi };
+  }
+  var ROWS = [0xFF, 0xFF00, 0xFF0000, 0xFF000000 | 0], COLS = [];
+  for (var cc = 0; cc < 8; cc++) COLS.push((0x01010101 << cc) | 0);
+  function afterPlace(lo, hi, m) {
+    lo |= m.lo; hi |= m.hi;
+    var clo = 0, chi = 0;
+    for (var r = 0; r < 4; r++) { if ((lo & ROWS[r]) === ROWS[r]) clo |= ROWS[r]; if ((hi & ROWS[r]) === ROWS[r]) chi |= ROWS[r]; }
+    for (var c = 0; c < 8; c++) if ((lo & COLS[c]) === COLS[c] && (hi & COLS[c]) === COLS[c]) { clo |= COLS[c]; chi |= COLS[c]; }
+    return { lo: lo & ~clo, hi: hi & ~chi };
+  }
+  function popcount(x) { x = x - ((x >>> 1) & 0x55555555); x = (x & 0x33333333) + ((x >>> 2) & 0x33333333); return (((x + (x >>> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24; }
+  function bitMobility(lo, hi, lists, used) {
+    var n = 0;
+    for (var i = 0; i < lists.length; i++) { if (used & (1 << i)) continue; var ms = lists[i]; for (var j = 0; j < ms.length; j++) if (((lo & ms[j].lo) | (hi & ms[j].hi)) === 0) n++; }
+    return n;
+  }
+  function deepMove(game, rng, budgetMs) {
+    rng = rng || Math.random; budgetMs = budgetMs || 150;
+    var live = [];
+    game.pool.forEach(function (p, idx) { if (!p.used) live.push({ idx: idx, masks: masksFor(p.matrix) }); });
+    if (!live.length) return null;
+    var lists = live.map(function (l) { return l.masks; });
+    var all = (1 << lists.length) - 1;
+    var b0 = gridBits(game.grid);
+    var SAMPLES = 6, SAMPLE_DEPTH = 2, WIDTH = 32, tt = {}, refillMemo = {}, deadline = Date.now() + budgetMs, nodes = 0, aborted = false;
+    var seed = Math.floor(rng() * 4294967296) >>> 0;
+    var srng = function () { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    var dealerFor = game.samplingDealers(srng);
+    var ctxSeq = 0;
+    var ctx0 = { id: ctxSeq++, lists: lists, all: all };
+    // Value, for the player who faces a fresh refill on this board, of that
+    // lottery: the average over sampled refills of a short search of the
+    // new batch (a refill with nothing that fits is a loss). Refills come
+    // in even batches, so the same side faces every one of them; the other
+    // side's whole plan is to crowd the board for it.
+    function refillValue(lo, hi) {
+      var k = lo + ',' + hi, hit = refillMemo[k];
+      if (hit !== undefined) return hit;
+      var empty = 64 - popcount(lo) - popcount(hi), dealer = dealerFor(empty), total = 0;
+      for (var s = 0; s < SAMPLES; s++) {
+        var sample = [];
+        for (var i = 0; i < game.cfg.refillSize; i++) sample.push(masksFor(game.shapes[dealer()]));
+        var sctx = { id: ctxSeq++, lists: sample, all: (1 << sample.length) - 1 };
+        total += ab(sctx, lo, hi, 0, SAMPLE_DEPTH, -Infinity, Infinity);
+      }
+      return (refillMemo[k] = total / SAMPLES);
+    }
+    function children(ctx, lo, hi, used) {
+      var kids = [], lists = ctx.lists;
+      for (var i = 0; i < lists.length; i++) {
+        if (used & (1 << i)) continue;
+        var ms = lists[i], u2 = used | (1 << i), ex = u2 === ctx.all;
+        for (var j = 0; j < ms.length; j++) {
+          var m = ms[j]; if (((lo & m.lo) | (hi & m.hi)) !== 0) continue;
+          var nb = afterPlace(lo, hi, m);
+          kids.push({ i: i, m: m, lo: nb.lo, hi: nb.hi, used: u2, ex: ex, h: ex ? refillValue(nb.lo, nb.hi) : bitMobility(nb.lo, nb.hi, lists, u2) });
+        }
+      }
+      kids.sort(function (a, b) { return a.h - b.h; });
+      return kids;
+    }
+    // Value for the mover.
+    function ab(ctx, lo, hi, used, depth, alpha, beta) {
+      nodes++;
+      if ((nodes & 127) === 0 && Date.now() > deadline) { aborted = true; return 0; }
+      var mob = bitMobility(lo, hi, ctx.lists, used);
+      if (mob === 0) return -BIG - depth;
+      if (depth === 0) return mob;
+      var k = ctx.id + ':' + lo + ',' + hi + ',' + used + ',' + depth, hit = tt[k];
+      if (hit) { if (hit.f === 0) return hit.v; if (hit.f === 1 && hit.v >= beta) return hit.v; if (hit.f === 2 && hit.v <= alpha) return hit.v; }
+      var kids = children(ctx, lo, hi, used), best = -Infinity, a0 = alpha, W = Math.min(WIDTH, kids.length);
+      for (var i = 0; i < W; i++) {
+        var kid = kids[i], v;
+        if (kid.ex) v = -kid.h; else if (kid.h === 0) v = BIG + depth; else v = -ab(ctx, kid.lo, kid.hi, kid.used, depth - 1, -beta, -alpha);
+        if (aborted) return 0;
+        if (v > best) best = v;
+        if (v > alpha) alpha = v;
+        if (alpha >= beta) break;
+      }
+      tt[k] = { v: best, f: best <= a0 ? 2 : best >= beta ? 1 : 0 };
+      return best;
+    }
+    var kids = children(ctx0, b0.lo, b0.hi, 0);
+    if (!kids.length) return null;
+    kids.forEach(function (k) { k.tie = rng(); });
+    kids.sort(function (a, b) { return (a.h - b.h) || (a.tie - b.tie); });
+    var best = kids[0];
+    if (!best.ex && best.h === 0) return { idx: live[best.i].idx, top: best.m.top, left: best.m.left }; // strand them now
+    for (var depth = 1; depth <= 14; depth++) {
+      var alpha = -Infinity, bestV = -Infinity;
+      for (var i = 0; i < Math.min(WIDTH, kids.length); i++) {
+        var kid = kids[i], v;
+        if (kid.ex) v = -kid.h; else v = -ab(ctx0, kid.lo, kid.hi, kid.used, depth - 1, -Infinity, -alpha);
+        if (aborted) break;
+        kid.v = v;
+        if (v > bestV) bestV = v;
+        if (v > alpha) alpha = v;
+      }
+      if (aborted) break;
+      deepMove.lastDepth = depth;
+      kids.sort(function (a, b) { return ((b.v === undefined ? -Infinity : b.v) - (a.v === undefined ? -Infinity : a.v)) || (a.h - b.h) || (a.tie - b.tie); });
+      best = kids[0];
+      if (bestV >= BIG || bestV <= -BIG) break;
+    }
+    deepMove.lastNodes = nodes;
+    return { idx: live[best.i].idx, top: best.m.top, left: best.m.left };
   }
 
   // ---------- puzzle-duel clocks ----------

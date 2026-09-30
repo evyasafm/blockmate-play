@@ -397,7 +397,8 @@
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
       padding: 10px 0; border-bottom: 1px solid var(--grid-line);
     }
-    .setting-row:last-child { border-bottom: none; }
+    .setting-row:last-child, #settingsAdvanced .setting-row:last-child { border-bottom: none; }
+    #settingsAdvanced { border-top: 1px dashed var(--line, #2a2e39); margin-top: 6px; }
     .setting-label { font-size: 14px; font-weight: 600; }
     .setting-sub { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
     .setting-group { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 14px 0 2px; }
@@ -406,7 +407,7 @@
     .dl-stack { display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex: 0 0 auto; min-width: 64px; }
     .dl-word { font-size: 11px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; }
     .checks { display: flex; gap: 12px; font-size: 12px; font-weight: 700; color: var(--text); }
-    .checks label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    .checks label { display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; }
     .checks input { width: 16px; height: 16px; accent-color: var(--accent); }
     /* Level builder + admin */
     .builder-card { max-width: 420px; }
@@ -701,29 +702,22 @@
   <div class="modal" role="dialog" aria-modal="true" id="settingsModal">
     <div class="modal-card">
       <div class="modal-title"><span>Settings</span><button class="ctrl" id="settingsCloseBtn">Close</button></div>
+      <div class="setting-group">Play</div>
       <div class="setting-row">
         <div><div class="setting-label">Sound</div><div class="setting-sub">Synthesized tones on place, clear, win.</div></div>
         <button class="toggle-btn" id="soundToggleBtn" aria-pressed="false">Off</button>
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label">Clock beeps</div><div class="setting-sub">A beep when the clock of whoever is on move reaches 10 s and/or 5 s. Independent of the Sound switch.</div></div>
-        <div class="checks"><label><input type="checkbox" id="alert10Chk" /> 10 s</label><label><input type="checkbox" id="alert5Chk" /> 5 s</label></div>
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label">Score</div><div class="setting-sub">Time, picks and resets — tap the readout to switch stage / total.</div></div>
-        <button class="toggle-btn" id="scoreToggleBtn" aria-pressed="false">Off</button>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Hint nudge</div><div class="setting-sub">Pulse the Hint button after two fails in a row.</div></div>
         <button class="toggle-btn" id="hintPulseToggleBtn" aria-pressed="true">On</button>
       </div>
       <div class="setting-row">
-        <div><div class="setting-label">Premium</div><div class="setting-sub">Pick any open level in the bank, see its difficulty, and skip to the next bank after 3 wins. On by default during the beta — the purchase comes later.</div></div>
-        <button class="toggle-btn" id="premiumToggleBtn" aria-pressed="true">On</button>
-      </div>
-      <div class="setting-row">
         <div><div class="setting-label">Mix modes</div><div class="setting-sub">After a win, the next level comes from the other mode — Survive, then Lose, then Survive…</div></div>
         <button class="toggle-btn" id="mixToggleBtn" aria-pressed="false">Off</button>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Rewind after a loss</div><div class="setting-sub">After a fail, offer to jump back to the last move that still had a solution. Off: start over from move 1 and earn it. A rewound win never gets the Perfect badge.</div></div>
+        <button class="toggle-btn" id="rewindToggleBtn" aria-pressed="true">On</button>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Tutorial</div><div class="setting-sub">Guided intro for Survive, Lose or Duel — pick one, or all three.</div></div>
@@ -743,31 +737,21 @@
         <button class="toggle-btn" id="colorsafeToggleBtn" aria-pressed="false">Off</button>
       </div>
       <div class="setting-row">
-        <div><div class="setting-label">Rewind after a loss</div><div class="setting-sub">After a fail, offer to jump back to the last move that still had a solution. Off: start over from move 1 and earn it. A rewound win never gets the Perfect badge.</div></div>
-        <button class="toggle-btn" id="rewindToggleBtn" aria-pressed="true">On</button>
-      </div>
-      <div class="setting-row">
         <div><div class="setting-label">Haptics</div><div class="setting-sub">A tick on place, a thump on clear (phones only).</div></div>
         <button class="toggle-btn" id="hapticToggleBtn" aria-pressed="true">On</button>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Score</div><div class="setting-sub">Time, picks and resets — tap the readout to switch stage / total.</div></div>
+        <button class="toggle-btn" id="scoreToggleBtn" aria-pressed="false">Off</button>
       </div>
       <div class="setting-group">Duel</div>
       <div class="setting-row">
         <div><div class="setting-label">Premoves</div><div class="setting-sub">While the other side is on move, drop pieces to queue them (shown see-through). They play in order when your turn comes, if they still fit. Tap a queued piece to cancel them all.</div></div>
         <button class="toggle-btn" id="premoveToggleBtn" aria-pressed="true">On</button>
       </div>
-      <div class="setting-group">Create</div>
       <div class="setting-row">
-        <div><div class="setting-label">Level builder</div><div class="setting-sub">Design your own Survive or Lose stage: paint the grey cells, pick the pieces, test it, get its rating, submit it for the game. Premium.</div></div>
-        <button class="toggle-btn" id="builderBtn">Open</button>
-      </div>
-      <div class="setting-group">Progress</div>
-      <div class="setting-row">
-        <div><div class="setting-label">Back up progress</div><div class="setting-sub">Saves everything (levels won, solutions, dailies, duel record, settings) as one small file through the share sheet. Keep it in your notes or mail; it restores on any phone.</div></div>
-        <button class="toggle-btn" id="backupBtn">Save</button>
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label">Restore from backup</div><div class="setting-sub">Pick a blockmate-backup.json file. Replaces the progress on this phone.</div></div>
-        <label class="toggle-btn" for="restoreFile" style="cursor:pointer">Open</label><input type="file" id="restoreFile" accept=".json,application/json" hidden />
+        <div><div class="setting-label">Clock beeps</div><div class="setting-sub">A beep when the clock of whoever is on move reaches 10 s and/or 5 s. Independent of the Sound switch.</div></div>
+        <div class="checks"><label><input type="checkbox" id="alert10Chk" /> 10 s</label><label><input type="checkbox" id="alert5Chk" /> 5 s</label></div>
       </div>
       <div class="setting-group">Beta</div>
       <div class="setting-row">
@@ -786,6 +770,29 @@
         <div><div class="setting-label">Send game data</div><div class="setting-sub">Share your progress and play log (a small JSON file) so I can see where levels are too hard.</div></div>
         <button class="toggle-btn" id="sendDataBtn">Share</button>
       </div>
+      <div class="setting-row advanced-row">
+        <div><div class="setting-label">Advanced</div><div class="setting-sub">Premium, level builder, backups, developer switches.</div></div>
+        <button class="toggle-btn" id="advancedBtn" aria-expanded="false">Show</button>
+      </div>
+      <div id="settingsAdvanced" hidden>
+      <div class="setting-group">Premium & create</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Premium</div><div class="setting-sub">Pick any open level in the bank, see its difficulty, and skip to the next bank after 3 wins. On by default during the beta — the purchase comes later.</div></div>
+        <button class="toggle-btn" id="premiumToggleBtn" aria-pressed="true">On</button>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Level builder</div><div class="setting-sub">Design your own Survive or Lose stage: paint the grey cells, pick the pieces, test it, get its rating, submit it for the game. Premium.</div></div>
+        <button class="toggle-btn" id="builderBtn">Open</button>
+      </div>
+      <div class="setting-group">Progress</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Back up progress</div><div class="setting-sub">Saves everything (levels won, solutions, dailies, duel record, settings) as one small file through the share sheet. Keep it in your notes or mail; it restores on any phone.</div></div>
+        <button class="toggle-btn" id="backupBtn">Save</button>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Restore from backup</div><div class="setting-sub">Pick a blockmate-backup.json file. Replaces the progress on this phone.</div></div>
+        <label class="toggle-btn" for="restoreFile" style="cursor:pointer">Open</label><input type="file" id="restoreFile" accept=".json,application/json" hidden />
+      </div>
       <div class="setting-group">Developer</div>
       <div class="setting-row">
         <div><div class="setting-label">Direct download</div><div class="setting-sub">HTML: the whole game as one file, opens offline in any browser (on the phone it goes out through the share sheet). APK: the Android app.</div></div>
@@ -798,6 +805,7 @@
       <div class="setting-row" id="adminRow" hidden>
         <div><div class="setting-label">Admin panel</div><div class="setting-sub">Review submitted levels: load a code, verify, approve or reject, export the approved set.</div></div>
         <button class="toggle-btn" id="adminBtn">Open</button>
+      </div>
       </div>
     </div>
   </div>
@@ -6170,7 +6178,15 @@
     btn.setAttribute('aria-pressed', String(on));
     btn.textContent = on ? 'On' : 'Off';
   }
+  // The Advanced section (premium, builder, backups, developer) stays folded
+  // unless opened; the fold is remembered. Test pages start unfolded.
+  var settingsAdvancedEl = document.getElementById('settingsAdvanced');
+  var advancedBtn = document.getElementById('advancedBtn');
+  function advancedOpen() { var p = getPref('bb_settings_adv'); return p === '1' || (location.hash === '#test' && p !== '0'); }
+  function renderAdvanced() { var open = advancedOpen(); settingsAdvancedEl.hidden = !open; advancedBtn.textContent = open ? 'Hide' : 'Show'; advancedBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+  advancedBtn.addEventListener('click', function () { setPref('bb_settings_adv', advancedOpen() ? '0' : '1'); renderAdvanced(); });
   function renderSettings() {
+    renderAdvanced();
     setToggleUI(soundToggleBtn, soundEnabled);
     setToggleUI(scoreToggleBtn, scoreEnabled);
     setToggleUI(hintPulseToggleBtn, hintPulseEnabled());

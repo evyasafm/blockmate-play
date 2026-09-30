@@ -241,8 +241,11 @@
        batch — see renderTray — so old slots don't pile up.) */
     .tray-piece.used { visibility: hidden; pointer-events: none; }
     /* Duel premoves: queued while the other side is on move. */
-    .tray-piece.premoved { opacity: 0.35; cursor: pointer; }
-    .cell.premove { opacity: 0.45; }
+    .tray-piece.premoved { opacity: 0.35; cursor: grab; position: relative; }
+    .cell.premove { opacity: 0.45; position: relative; }
+    /* Queue order, once there is more than one premove */
+    .cell.premove[data-pm]::after { content: attr(data-pm); position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: calc(var(--cell) * 0.5); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.7); pointer-events: none; }
+    .tray-piece.premoved[data-pm]::after { content: attr(data-pm); position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: #0b0d12; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; opacity: 1; }
     .tray-piece.held {
       cursor: pointer; transform: translateY(-8px);
       box-shadow: 0 10px 22px rgba(76,201,240,0.35), inset 0 0 0 2px var(--accent);
@@ -3172,7 +3175,7 @@
       var v = board[r][c];
       el.className = 'cell';
       el.style.backgroundColor = '';
-      el.removeAttribute('data-ck');
+      el.removeAttribute('data-ck'); el.removeAttribute('data-pm');
       if (v) {
         if (v.preset) el.classList.add('preset');
         else { el.classList.add('filled'); el.style.backgroundColor = v.color; el.setAttribute('data-ck', glyphFor(v.color)); }
@@ -3215,8 +3218,8 @@
           else cell.className = 'pcell off';
           wrap.appendChild(cell);
         }
-      if (queued[idx]) { wrap.setAttribute('data-piece-idx', String(idx)); wrap.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); clearPremoves('Premoves cancelled.'); }); }
-      else if (!p.used) attachDrag(wrap, idx);
+      if (queued[idx] && premoveList().length > 1) wrap.setAttribute('data-pm', String(premoveIndexOf(idx) + 1));
+      if (!p.used) attachDrag(wrap, idx); // a queued piece drags again with its number (see beginPointer)
       trayEl.appendChild(wrap);
     });
     fitTraySize();
@@ -3640,7 +3643,7 @@
   // Time per player for the whole game (Opponent row → clock dropdown).
   // Unset = the variant's default: 60 s for the pool duels, 30 s for the
   // puzzle duels. The starter's penalty scales down for short clocks.
-  var CLOCK_OPTIONS = [5, 10, 15, 20, 25, 30, 45, 60, 90, 120, 300, 600, 900, 1800];
+  var CLOCK_OPTIONS = [5, 10, 15, 20, 25, 30, 45, 60, 90, 120, 300, 600, 900, 1800, 0]; // 0 = no clock (∞)
   // Increment: seconds given back to the mover after every move (0 = off).
   // It stacks with the refill bonus / the puzzle-solved bonus.
   var INC_OPTIONS = [0, 1, 2, 3, 5, 10, 15];
@@ -3650,17 +3653,22 @@
     INC_OPTIONS.forEach(function (sec) { var o = document.createElement('option'); o.value = String(sec); o.textContent = sec ? '+' + sec + 's' : 'no inc'; incSelectEl.appendChild(o); });
     incSelectEl.value = String(duelIncMs() / 1000);
   }
-  function clockLabel(sec) { return sec < 120 ? sec + 's' : (sec / 60) + 'm'; }
+  function clockLabel(sec) { return !sec ? '∞' : sec < 120 ? sec + 's' : (sec / 60) + 'm'; }
   function duelClockMs() {
     var pref = parseInt(getPref('bb_duel_clock') || '', 10);
+    if (pref === 0) return Infinity; // no clock
     if (CLOCK_OPTIONS.indexOf(pref) !== -1) return pref * 1000;
     return duelIsPuzzle() ? 30000 : 60000;
   }
+  // The clock as a setting value: seconds, 0 for none (Infinity doesn't survive JSON or a <select>).
+  function clockSeconds() { var ms = duelClockMs(); return ms === Infinity ? 0 : ms / 1000; }
+  function clockFromWire(ms) { return ms === -1 || ms === null ? Infinity : ms; }
+  function clockToWire(ms) { return ms === Infinity ? -1 : ms; }
   function starterPenaltyFor(clockMs) { return clockMs >= 30000 ? 5000 : Math.round(clockMs * 0.1); }
   function buildClockSelect() {
     clockSelectEl.innerHTML = '';
     CLOCK_OPTIONS.forEach(function (sec) { var o = document.createElement('option'); o.value = String(sec); o.textContent = clockLabel(sec); clockSelectEl.appendChild(o); });
-    clockSelectEl.value = String(duelClockMs() / 1000);
+    clockSelectEl.value = String(clockSeconds());
     if (typeof renderClockBtn === 'function' && !clockBtn.hidden) renderClockBtn();
   }
   var PUZZLE_AI_THINK_MS = { easy: 4000, medium: 3000, hard: 2000 };
@@ -3840,6 +3848,7 @@
   }
 
   function formatClock(ms) {
+    if (ms === Infinity) return '∞';
     var s = Math.max(0, Math.ceil(ms / 1000));
     return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60);
   }
@@ -3978,7 +3987,7 @@
     else if (g.reason === 'broke') why = duelPlayerName(g.loser) + ' lost: ' + (puzzleMode() === 'lose'
       ? 'after that move the board can\'t be jammed anymore — there\'s always room for a piece.'
       : 'after that move the remaining pieces can\'t all be placed.');
-    else if (g.reason === 'done') why = 'All ' + g.levels.length + ' puzzles solved — ' + duelPlayerName(g.winner) + (g.winner === 'A' && duelVsComputer() ? ' have' : ' has') + ' more time left.';
+    else if (g.reason === 'done') why = 'All ' + g.levels.length + ' puzzles solved — ' + (g.clocks.A === g.clocks.B ? 'nobody broke one, so it goes to whoever was on move.' : duelPlayerName(g.winner) + (g.winner === 'A' && duelVsComputer() ? ' have' : ' has') + ' more time left.');
     else why = duelPlayerName(g.loser) + (loserIsYou ? ' have' : ' has') + ' no piece that fits.';
     // Same feedback as a Survive / Lose result: a win flashes the board and
     // chimes, a loss plays the fail sound and turns the status red. In
@@ -4063,7 +4072,7 @@
     });
     presetSelectEl.hidden = true; // the count is picked from the Filled tab's popup
     presetSelectEl.value = String(duelBPresets());
-    if (clockSelectEl.options.length) clockSelectEl.value = String(duelClockMs() / 1000);
+    if (clockSelectEl.options.length) clockSelectEl.value = String(clockSeconds());
     if (incSelectEl.options.length) incSelectEl.value = String(duelIncMs() / 1000);
   }
   // ---------- Online duel ----------
@@ -4187,7 +4196,7 @@
   }
   function variantLabel(v, presets, clockSec) {
     var base = v === 'a' ? 'Empty board' : v === 'b' ? 'Filled · ' + presets + ' grey cells' : v === 's' ? 'Survive puzzles' : 'Lose puzzles';
-    return base + (clockSec ? ' · ' + clockLabel(clockSec) + ' each' : '') + (duelIncMs() ? ' +' + (duelIncMs() / 1000) + 's/move' : '');
+    return base + (clockSec ? ' · ' + clockLabel(clockSec) + ' each' : ' · no clock') + (duelIncMs() ? ' +' + (duelIncMs() / 1000) + 's/move' : '');
   }
   // Both phones: "<mode> — starting in 3, 2, 1", then the host deals.
   function startConnectCountdown(v, presets, secs, by) {
@@ -4197,7 +4206,7 @@
     var prefix = by ? duelPlayerName(by) + ' switched to ' : '';
     var q = document.createElement('span'); q.className = 'pass-q';
     var cnt = document.createElement('span'); cnt.className = 'pass-count big';
-    q.textContent = prefix + variantLabel(v, presets, duelClockMs() / 1000);
+    q.textContent = prefix + variantLabel(v, presets, clockSeconds());
     duelTurnEl.textContent = ''; duelTurnEl.appendChild(q); duelTurnEl.appendChild(cnt);
     function paint() {
       var left = Math.max(0, Math.ceil((ends - Date.now()) / 1000));
@@ -4216,7 +4225,7 @@
   // 4-second heads-up naming who switched and to what.
   function restartDuel(by) {
     if (isOnline() && online.side === 'A' && online.link) {
-      online.link.send({ t: 'countdown', variant: duel.variant, presets: duelBPresets(), clock: duelClockMs() / 1000, inc: duelIncMs() / 1000, secs: 4, by: by });
+      online.link.send({ t: 'countdown', variant: duel.variant, presets: duelBPresets(), clock: clockSeconds(), inc: duelIncMs() / 1000, secs: 4, by: by });
       startConnectCountdown(duel.variant, duelBPresets(), 4, by);
       return;
     }
@@ -4237,7 +4246,7 @@
     link.onMessage(side === 'A' ? hostMessage : guestMessage);
     link.onClose(function () { onlineLost(); });
     if (side === 'A') {
-      link.send({ t: 'countdown', variant: duel.variant, presets: duelBPresets(), clock: duelClockMs() / 1000, inc: duelIncMs() / 1000, secs: 3 });
+      link.send({ t: 'countdown', variant: duel.variant, presets: duelBPresets(), clock: clockSeconds(), inc: duelIncMs() / 1000, secs: 3 });
       startConnectCountdown(duel.variant, duelBPresets(), 3);
     } else {
       clearTable('Connected — waiting for Blue to start.');
@@ -4274,9 +4283,9 @@
   function duelSnapshot() {
     var g = duel.game;
     return {
-      t: 'state', variant: duel.variant, presets: duelBPresets(), clock: duelClockMs() / 1000, inc: duelIncMs() / 1000, rating: rating(), score: duel.score, lastStarter: duel.lastStarter,
+      t: 'state', variant: duel.variant, presets: duelBPresets(), clock: clockSeconds(), inc: duelIncMs() / 1000, rating: rating(), score: duel.score, lastStarter: duel.lastStarter,
       phase: g ? g.phase : 'none', turn: g ? g.turn : null, starter: g ? g.starter : null, drawn: g ? g.drawn : null,
-      clocks: g ? { A: g.clocks.A, B: g.clocks.B } : { A: 0, B: 0 },
+      clocks: g ? { A: clockToWire(g.clocks.A), B: clockToWire(g.clocks.B) } : { A: 0, B: 0 },
       winner: g ? g.winner : null, loser: g ? g.loser : null, reason: g ? g.reason : null, moves: g ? g.moves : 0, solved: g ? g.solved : 0,
       poolLeft: g && g.pool ? g.pool.filter(function (p) { return !p.used; }).length : 0, batchStart: g && g.batchStart ? g.batchStart : 0, ack: online.lastAck,
       levelIdx: g ? g.levelIdx : 0, levelsTotal: g && g.levels ? g.levels.length : 0, levelName: g && g.level ? g.level().name : '',
@@ -4293,7 +4302,7 @@
   // Guest ← host.
   function guestMessage(msg) {
     if (msg.t === 'bye') { onlineLost(); return; }
-    if (msg.t === 'countdown') { if (!VARIANTS.some(function (x) { return x.id === msg.variant; })) return; duel.variant = msg.variant; msg.presets = clampPresets(msg.presets); setPref('bb_duel_presets', String(msg.presets)); renderVariantTabs(); if (msg.clock) { setPref('bb_duel_clock', String(msg.clock)); clockSelectEl.value = String(msg.clock); } if (msg.inc !== undefined) { setPref('bb_duel_inc', String(msg.inc)); incSelectEl.value = String(msg.inc); } startConnectCountdown(msg.variant, msg.presets, msg.secs, msg.by || null); return; }
+    if (msg.t === 'countdown') { if (!VARIANTS.some(function (x) { return x.id === msg.variant; })) return; duel.variant = msg.variant; msg.presets = clampPresets(msg.presets); setPref('bb_duel_presets', String(msg.presets)); renderVariantTabs(); if (msg.clock !== undefined && msg.clock !== null) { setPref('bb_duel_clock', String(msg.clock)); clockSelectEl.value = String(msg.clock); } if (msg.inc !== undefined) { setPref('bb_duel_inc', String(msg.inc)); incSelectEl.value = String(msg.inc); } startConnectCountdown(msg.variant, msg.presets, msg.secs, msg.by || null); return; }
     if (msg.t !== 'state') return;
     // A frame we can't render is dropped, not fatal.
     if (!Array.isArray(msg.board) || msg.board.length !== N || !msg.board.every(function (row) { return Array.isArray(row) && row.length === N; })) return;
@@ -4313,7 +4322,8 @@
     if (duel.variant !== msg.variant) { duel.variant = msg.variant; renderVariantTabs(); }
     msg.presets = clampPresets(msg.presets);
     if (String(duelBPresets()) !== String(msg.presets)) { setPref('bb_duel_presets', String(msg.presets)); presetSelectEl.value = String(msg.presets); renderVariantTabs(); }
-    if (msg.clock && String(duelClockMs() / 1000) !== String(msg.clock)) { setPref('bb_duel_clock', String(msg.clock)); clockSelectEl.value = String(msg.clock); }
+    if (msg.clock !== undefined && msg.clock !== null && String(clockSeconds()) !== String(msg.clock)) { setPref('bb_duel_clock', String(msg.clock)); clockSelectEl.value = String(msg.clock); }
+    if (msg.clocks) msg.clocks = { A: clockFromWire(msg.clocks.A), B: clockFromWire(msg.clocks.B) };
     if (msg.inc !== undefined && String(duelIncMs() / 1000) !== String(msg.inc)) { setPref('bb_duel_inc', String(msg.inc)); incSelectEl.value = String(msg.inc); }
     duel.score = msg.score; duel.lastStarter = msg.lastStarter;
     duel.game = {
@@ -5292,9 +5302,12 @@
 
   // ---------- Duel premoves ----------
   // While the other side is on move you can already drop pieces: they queue
-  // (see-through on the tray and the board) and play in order as soon as
-  // your turn comes — each only if it still fits then. Tapping any queued
-  // piece cancels the whole queue. Settings → Premoves turns it off.
+  // (see-through on the tray and the board, numbered in order once there is
+  // more than one) and play in order as soon as your turn comes — each only
+  // if it still fits then. A queued piece can be picked up again, from the
+  // board or the pool: dropped elsewhere it keeps its number, dropped back
+  // on the pool (or anywhere it doesn't fit) it leaves the queue and the
+  // rest close up. Settings → Premoves turns it off.
   function premovesEnabled() { return getPref('bb_premove') !== '0'; }
   function premoveList() { return duel.premoves || (duel.premoves = []); }
   function isMyTurnNow() {
@@ -5311,8 +5324,10 @@
     return duelVsComputer() && g.turn === 'B';
   }
   function premoveIdxSet() { var set = {}; premoveList().forEach(function (pm) { set[pm.idx] = true; }); return set; }
+  function premoveIndexOf(idx) { var list = premoveList(); for (var k = 0; k < list.length; k++) if (list[k].idx === idx) return k; return -1; }
+  function premoveAtCell(i) { var list = premoveList(); for (var k = 0; k < list.length; k++) if (list[k].cells.indexOf(i) !== -1) return k; return -1; }
   function premoveCellSet() { var set = {}; premoveList().forEach(function (pm) { pm.cells.forEach(function (i) { set[i] = true; }); }); return set; }
-  function addPremove(idx, top, left) {
+  function addPremove(idx, top, left, at) {
     var p = pieces[idx];
     if (!p || p.used || premoveIdxSet()[idx]) return false;
     if (!fits(p.matrix, top, left)) return false;
@@ -5323,9 +5338,10 @@
       if (taken[i]) return false; // overlaps an earlier premove
       cells.push(i);
     }
-    premoveList().push({ idx: idx, key: p.key, top: top, left: left, cells: cells });
+    var entry = { idx: idx, key: p.key, top: top, left: left, cells: cells }, list = premoveList();
+    if (at !== undefined && at !== null && at >= 0 && at < list.length) list.splice(at, 0, entry); else list.push(entry);
     renderBoard(); renderTray();
-    setStatus(premoveList().length === 1 ? 'Premove set — it plays when your turn comes. Tap it to cancel.' : premoveList().length + ' premoves queued. Tap one to cancel them all.', false);
+    setStatus(list.length === 1 ? 'Premove set — it plays when your turn comes. Drag it to move it, or back to the pool to remove it.' : list.length + ' premoves queued, numbered in order.', false);
     logEvent('premove', { n: premoveList().length });
     return true;
   }
@@ -5338,7 +5354,8 @@
   function paintPremoves() {
     if (currentMode !== 'duel' || !premoveList().length) return;
     var mine = DUEL_COLORS[mySide()];
-    premoveList().forEach(function (pm) { pm.cells.forEach(function (i) { if (cellEls[i]) { cellEls[i].classList.add('premove'); cellEls[i].style.backgroundColor = mine; } }); });
+    var many = premoveList().length > 1;
+    premoveList().forEach(function (pm, k) { pm.cells.forEach(function (i) { if (cellEls[i]) { cellEls[i].classList.add('premove'); cellEls[i].style.backgroundColor = mine; if (many) cellEls[i].setAttribute('data-pm', String(k + 1)); } }); });
   }
   // Your turn just arrived: play the first queued premove (a beat later, so
   // the opponent's move is on screen first).
@@ -5355,9 +5372,9 @@
     }, 250);
   }
 
-  function placePiece(idx, top, left) {
+  function placePiece(idx, top, left, at) {
     // A move arriving from the other phone is applied, never queued as one of ours.
-    if (currentMode === 'duel' && !online.applyingRemote && premoveAllowed()) return addPremove(idx, top, left);
+    if (currentMode === 'duel' && !online.applyingRemote && premoveAllowed()) return addPremove(idx, top, left, at);
     if (currentMode === 'duel' && isOnline() && online.side === 'B') {
       // Guest: an intent, not a placement — the host validates and answers with a snapshot.
       var g = duel.game;
@@ -5831,6 +5848,8 @@
 
   function beginPointer(idx, e, el) {
     if (!armDragFor(idx, e, el)) return;
+    var k = premoveIndexOf(idx);
+    if (k !== -1) { premoveList().splice(k, 1); drag.premoveAt = k; renderBoard(); } // lifted out of the queue; it goes back in at k if it lands
     pointerStart = { x: e.clientX, y: e.clientY };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
@@ -5883,9 +5902,9 @@
     window.removeEventListener('pointerup', onUp);
     window.removeEventListener('pointercancel', onCancelDrag);
     if (moved) {
-      var a = targetAnchor(e.clientX, e.clientY);
+      var a = targetAnchor(e.clientX, e.clientY), at = drag.premoveAt;
       endInteraction();
-      placePiece(idx, a.top, a.left);
+      if (!placePiece(idx, a.top, a.left, at) && at !== undefined) premoveRemoved();
     } else {
       enterCarryMode(idx);
     }
@@ -5895,7 +5914,9 @@
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
     window.removeEventListener('pointercancel', onCancelDrag);
+    var wasQueued = drag && drag.premoveAt !== undefined;
     endInteraction();
+    if (wasQueued) premoveRemoved();
   }
 
   // ---- Click-to-pick / click-to-place ("carry" mode) ----
@@ -5925,9 +5946,12 @@
     window.removeEventListener('pointerup', onCarryPointerUp, true);
     window.removeEventListener('pointercancel', onCarryPointerCancel, true);
     window.removeEventListener('keydown', onCarryKey);
+    var wasQueued = drag && drag.premoveAt !== undefined;
     if (statusHeldBefore !== null) { setStatus(statusHeldBefore, false); statusHeldBefore = null; }
     endInteraction();
+    if (wasQueued) premoveRemoved();
   }
+  function premoveRemoved() { renderBoard(); renderTray(); var n = premoveList().length; setStatus(n ? 'Premove removed — ' + n + ' still queued.' : 'Premove removed.', false); }
 
   function onCarryMove(e) { if (!drag) return; moveGhost(e.clientX, e.clientY); showHints(targetAnchor(e.clientX, e.clientY)); }
 
@@ -5980,11 +6004,11 @@
     if (!drag || !carryPressOverBoard) return;
     carryPressOverBoard = false;
     e.preventDefault(); e.stopPropagation();
-    var idx = drag.idx;
+    var idx = drag.idx, at = drag.premoveAt;
     var a = targetAnchor(e.clientX, e.clientY);
     if (fits(pieces[idx].matrix, a.top, a.left)) {
       exitCarryMode();
-      placePiece(idx, a.top, a.left);
+      placePiece(idx, a.top, a.left, at);
       return;
     }
     // Released over an invalid spot — cancel and return the piece.
@@ -6034,10 +6058,11 @@
       if (lockReason === 'win') goNext();
       return;
     }
-    // Duel: a tap on a queued premove cancels the queue.
+    // Duel: a press on a queued premove lifts it (it keeps its place in the order if it lands again).
     if (currentMode === 'duel' && premoveList().length) {
       var pc = boardCellAt(e.clientX, e.clientY);
-      if (pc && premoveCellSet()[pc.row * N + pc.col]) { e.preventDefault(); clearPremoves('Premoves cancelled.'); return; }
+      var pk = pc ? premoveAtCell(pc.row * N + pc.col) : -1;
+      if (pk !== -1) { e.preventDefault(); liftPremove(pk, pc, e); return; }
     }
     // Duel: not your turn → the board is the computer's / the other phone's for a moment.
     if (currentMode === 'duel' && duel.game && duelIsComputer(duel.game.turn)) return;
@@ -6068,6 +6093,21 @@
   // Esc), it just returns to the tray, unused. Only works while the piece's
   // full original footprint is still intact; if an earlier line clear ate
   // part of it, there's no coherent "piece" left to pick up.
+  function liftPremove(k, cell, e) {
+    if (drag) return;
+    var pm = premoveList().splice(k, 1)[0];
+    var p = pieces[pm.idx]; if (!p || p.used) { renderBoard(); renderTray(); return; }
+    renderBoard();
+    var size = cellSize(), gap = gapSize();
+    buildGhostFor(p, size, gap);
+    drag = { idx: pm.idx, grabR: cell.row - pm.top, grabC: cell.col - pm.left, size: size, gap: gap, lift: liftFor(e, size), premoveAt: k };
+    moveGhost(e.clientX, e.clientY);
+    showHints(targetAnchor(e.clientX, e.clientY));
+    pointerStart = { x: e.clientX, y: e.clientY };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancelDrag);
+  }
   function pickUpPlaced(cell, e) {
     var v = board[cell.row][cell.col];
     var idx = v.pieceIdx, top = v.anchorTop, left = v.anchorLeft;
@@ -6419,7 +6459,7 @@
     newDuel();
   }
   function renderModeBtn() { var o = opponentInfo(duel.opponent); modeBtn.textContent = (o.short || o.label) + ' ▾'; }
-  function renderClockBtn() { var inc = duelIncMs() / 1000; clockBtn.textContent = '⏱ ' + clockLabel(duelClockMs() / 1000) + (inc ? ' +' + inc + 's' : ''); }
+  function renderClockBtn() { var inc = duelIncMs() / 1000; clockBtn.textContent = '⏱ ' + clockLabel(clockSeconds()) + (inc ? ' +' + inc + 's' : ''); }
   function openModePicker() {
     var list = document.getElementById('modeList'); list.innerHTML = '';
     OPPONENTS.forEach(function (o) {
@@ -6443,7 +6483,7 @@
   }
   function openClockPicker() {
     var cc = document.getElementById('clockChips'), ic = document.getElementById('incChips'); cc.innerHTML = ''; ic.innerHTML = '';
-    var curClock = duelClockMs() / 1000, curInc = duelIncMs() / 1000;
+    var curClock = clockSeconds(), curInc = duelIncMs() / 1000;
     CLOCK_OPTIONS.forEach(function (sec) {
       var b = document.createElement('button'); b.className = 'chip-btn' + (sec === curClock ? ' active' : ''); b.textContent = clockLabel(sec); b.setAttribute('data-clock', String(sec));
       b.addEventListener('click', function () { closeModal(clockModalEl); if (sec !== curClock) { clockSelectEl.value = String(sec); clockSelectEl.dispatchEvent(new Event('change')); } });

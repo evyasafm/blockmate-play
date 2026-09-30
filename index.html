@@ -220,20 +220,20 @@
     @keyframes flash { 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.9) saturate(1.4);} }
 
     #tray {
-      display: flex; flex-wrap: wrap; align-content: flex-start; gap: calc(var(--tray-cell, var(--cell)) * 0.25); align-items: flex-end;
+      display: flex; flex-wrap: wrap; align-content: flex-start; gap: calc(var(--tray-cell, var(--cell)) * 0.16); align-items: flex-end;
       justify-content: center;
       min-height: calc(var(--cell) * 2 + 20px);
-      width: 100%; padding: 12px; background: var(--panel);
+      width: 100%; padding: 8px; background: var(--panel);
       border-radius: 14px; border: 1px solid var(--grid-line);
       overflow: hidden; /* sizing guarantees a fit; nothing should ever scroll or poke out */
       touch-action: none;
     }
-    #tray.two-rows { flex-wrap: wrap; row-gap: calc(var(--tray-cell, var(--cell)) * 0.35); }
+    #tray.two-rows { flex-wrap: wrap; row-gap: calc(var(--tray-cell, var(--cell)) * 0.22); }
     #tray.packed { flex-direction: column; flex-wrap: nowrap; align-items: center; }
-    .tray-row { display: flex; gap: calc(var(--tray-cell, var(--cell)) * 0.25); align-items: flex-end; justify-content: center; }
+    .tray-row { display: flex; gap: calc(var(--tray-cell, var(--cell)) * 0.16); align-items: flex-end; justify-content: center; }
     .tray-piece {
-      display: grid; gap: calc(var(--tray-cell, var(--cell)) * 0.06); cursor: grab; touch-action: none;
-      padding: calc(var(--tray-cell, var(--cell)) * 0.12); border-radius: 10px;
+      display: grid; gap: calc(var(--tray-cell, var(--cell)) * 0.05); cursor: grab; touch-action: none;
+      padding: calc(var(--tray-cell, var(--cell)) * 0.07); border-radius: 10px;
       transition: transform 120ms ease, opacity 150ms ease;
     }
     .tray-piece:active { cursor: grabbing; }
@@ -252,7 +252,7 @@
       cursor: pointer; transform: translateY(-8px);
       box-shadow: 0 10px 22px rgba(76,201,240,0.35), inset 0 0 0 2px var(--accent);
     }
-    .pcell { width: calc(var(--tray-cell, var(--cell)) * 0.74); height: calc(var(--tray-cell, var(--cell)) * 0.74); border-radius: 6px; }
+    .pcell { width: calc(var(--tray-cell, var(--cell)) * 0.86); height: calc(var(--tray-cell, var(--cell)) * 0.86); border-radius: 6px; }
     .pcell.on { background-image: var(--bevel); box-shadow: inset 0 2px 2px rgba(255,255,255,0.28), inset 0 -2px 4px rgba(0,0,0,0.3); }
     .pcell.off { background: transparent !important; box-shadow: none; }
 
@@ -457,15 +457,14 @@
     /* ---- Online duel: invite / join ---- */
     .online { width: 100%; background: var(--panel); border: 1px solid var(--grid-line); border-radius: 12px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
     .online-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .online-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; align-items: stretch; }
-    .online-stack { display: flex; flex-direction: column; gap: 6px; }
-    .online-stack .ctrl { flex: 1; padding: 8px 6px; }
-    .ctrl.pub { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px; line-height: 1.1; }
-    .ctrl.pub small { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: none; }
-    .online-mycode { justify-content: center; background: var(--empty); border-radius: 10px; padding: 6px; }
+    .online-grid { display: flex; gap: 6px; align-items: stretch; }
+    .online-grid > .ctrl { flex: 0 0 auto; padding: 8px 10px; }
+    .ctrl.pub { border-color: rgba(76,201,240,0.35); }
+    .online-mycode { background: var(--empty); border-radius: 10px; padding: 4px 8px; }
     .online-row .ctrl { flex: 0 0 auto; padding: 8px 12px; }
     .online-input { flex: 1 1 120px; min-width: 0; background: var(--empty); color: var(--text); border: 1px solid var(--grid-line); border-radius: 10px; padding: 8px 10px; font-size: 14px; }
-    .online-code, .online-mycode { display: flex; flex-direction: column; gap: 0; flex: 1; align-items: center; }
+    .online-code { display: flex; flex-direction: column; gap: 0; flex: 1; align-items: center; }
+    .online-mycode { display: flex; flex-direction: row; gap: 6px; flex: 1 1 auto; min-width: 0; align-items: center; justify-content: center; }
     .online-code span, .online-mycode span { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
     .online-code b, .online-mycode b { font-size: 22px; letter-spacing: 3px; line-height: 1.2; font-variant-numeric: tabular-nums; color: var(--accent); }
     .code-field { width: 100%; min-width: 0; text-align: center; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--accent); font-size: 22px; letter-spacing: 3px; line-height: 1.2; font-variant-numeric: tabular-nums; font-weight: 700; padding: 0; outline: none; }
@@ -490,6 +489,7 @@
     .vtabs .preset-select { flex: 0 0 auto; margin-left: -2px; }
     /* Duel: everything on one line — mode · New · variants · clock. The level bar is not used there. */
     #app.duel .levelbar { display: none; }
+    #app.duel .status { display: none; } /* the bar says whose move; results have a card */
     #app.duel .controls { gap: 4px; }
     #app.duel .vtabs { padding: 2px; gap: 1px; }
     button.ctrl.mode-btn, button.ctrl.clock-btn { padding: 8px 7px; font-size: 11px; white-space: nowrap; }
@@ -621,11 +621,9 @@
       </div>
       <div class="online" id="onlinePanel" hidden>
         <div class="online-grid" id="onlineIdle">
-          <button class="ctrl pub" id="publicBtn"><b>Public</b><small>free for all</small></button>
-          <div class="online-stack">
-            <button class="ctrl assist" id="inviteBtn">Invite</button>
-            <button class="ctrl" id="joinBtn">Join</button>
-          </div>
+          <button class="ctrl pub" id="publicBtn" title="Play whoever is waiting">Public</button>
+          <button class="ctrl assist" id="inviteBtn" title="Get a code for a friend">Invite</button>
+          <button class="ctrl" id="joinBtn" title="Type a friend's code">Join</button>
           <div class="online-mycode" title="Invite shows your code here; Join lets you type your friend's code here"><span id="codeLabel">Your code</span><input class="code-field" id="codeField" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="······" autocomplete="off" readonly /></div>
         </div>
         <div class="online-row" id="onlineWait" hidden>
@@ -3216,7 +3214,7 @@
     var idxs = []; for (var i = from; i < pieces.length; i++) idxs.push(i);
     var byWidth = idxs.slice().sort(function (a, b) { return trayPieceWidth(pieces[b], 1) - trayPieceWidth(pieces[a], 1) || a - b; });
     var rows = [[], []], width = [0, 0];
-    byWidth.forEach(function (idx) { var r = width[0] <= width[1] ? 0 : 1; rows[r].push(idx); width[r] += trayPieceWidth(pieces[idx], 1) + 0.25; });
+    byWidth.forEach(function (idx) { var r = width[0] <= width[1] ? 0 : 1; rows[r].push(idx); width[r] += trayPieceWidth(pieces[idx], 1) + TRAY_GAP; });
     rows.forEach(function (row) { row.sort(function (a, b) { return a - b; }); });
     return rows;
   }
@@ -3267,9 +3265,11 @@
   var TRAY_MIN_CELL = 16; // px
   var TRAY_TWO_ROWS_AT = 10;
   var trayScale = 0.8; // two-row pools: tray cell as a share of the board cell; fitCellSize lowers it on short screens
-  var TRAY_PADDING = 24;  // #tray padding, both sides
-  function trayPieceWidth(p, c) { var cols = p.matrix[0].length; return cols * 0.74 * c + (cols - 1) * 0.06 * c + 0.24 * c; }
-  function trayRowWidth(list, c) { return list.reduce(function (s, p) { return s + trayPieceWidth(p, c); }, 0) + Math.max(0, list.length - 1) * 0.25 * c; }
+  var TRAY_PADDING = 16;  // #tray padding, both sides
+  var TRAY_GAP = 0.16;    // between pieces, in tray cells (CSS: #tray gap / .tray-row gap)
+  // CSS: .pcell 0.86c, inner gap 0.05c, .tray-piece padding 0.07c a side.
+  function trayPieceWidth(p, c) { var cols = p.matrix[0].length; return cols * 0.86 * c + (cols - 1) * 0.05 * c + 0.14 * c; }
+  function trayRowWidth(list, c) { return list.reduce(function (s, p) { return s + trayPieceWidth(p, c); }, 0) + Math.max(0, list.length - 1) * TRAY_GAP * c; }
   function trayRowCount() {
     // Pieces are bottom-aligned within a row (align-items: flex-end), so the
     // bottom edge is what all pieces in one row share — give or take the
@@ -3303,7 +3303,7 @@
     // otherwise start from "half the total width per row". Then confirm by
     // measuring, shrinking a step at a time until it really is two rows.
     var rows = trayEl._rows;
-    var widest = rows ? Math.max(trayRowWidth(rows[0].map(function (i) { return pieces[i]; }), baseCell), trayRowWidth(rows[1].map(function (i) { return pieces[i]; }), baseCell)) : trayRowWidth(unused, baseCell) / 2 + 0.25 * baseCell * 2;
+    var widest = rows ? Math.max(trayRowWidth(rows[0].map(function (i) { return pieces[i]; }), baseCell), trayRowWidth(rows[1].map(function (i) { return pieces[i]; }), baseCell)) : trayRowWidth(unused, baseCell) / 2 + TRAY_GAP * baseCell * 2;
     var c = Math.min(Math.round(baseCell * trayScale), Math.floor(baseCell * avail / widest));
     c = Math.max(TRAY_MIN_CELL, c);
     setTrayCell(c);
@@ -3654,7 +3654,7 @@
         return { color: DUEL_COLORS[v], preset: false, pieceIdx: -1, duel: true };
       });
     });
-    var color = g.turn ? DUEL_COLORS[g.turn] : DUEL_COLORS.A;
+    var color = duel.opponent === 'human' ? (g.turn ? DUEL_COLORS[g.turn] : DUEL_COLORS.A) : DUEL_COLORS[mySide()]; // pass-and-play: the mover's colour; otherwise yours
     pieces = g.pool.map(function (p) { return { key: p.key, matrix: p.matrix, color: color, used: p.used, placed: null }; });
   }
 
@@ -3804,7 +3804,7 @@
       history = [];
       m.loadedIdx = m.levelIdx + 1;
     }
-    var color = m.turn ? DUEL_COLORS[m.turn] : DUEL_COLORS.A;
+    var color = duel.opponent === 'human' ? (m.turn ? DUEL_COLORS[m.turn] : DUEL_COLORS.A) : DUEL_COLORS[mySide()];
     pieces.forEach(function (p) { if (!p.used) p.color = color; });
   }
 
@@ -4121,8 +4121,7 @@
     onlinePanelEl.hidden = false;
     showOnlineRow('idle');
     setCodeField('', false, 'Your code'); // empty until Invite (or Join, which types into it)
-    onlineNote(onlineAvailable() ? 'Invite: wait for a friend to type your code. Join: type theirs. Both phones need internet.' :
-      'Online play isn\'t available in this browser.', !onlineAvailable());
+    onlineNote(onlineAvailable() ? '' : 'Online play isn\'t available in this browser.', !onlineAvailable());
     clearTable('Invite a friend, or join with their code.');
     renderRecent();
   }

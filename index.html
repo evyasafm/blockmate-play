@@ -54,7 +54,7 @@
       /* Keep clear of the camera notch and the gesture bar inside the app shell. */
       /* The bottom padding is a safety margin: picking a piece right at the screen's edge would
          start the phone's swipe-up gesture, so the pool never reaches the edge. */
-      padding: calc(16px + env(safe-area-inset-top, 0px)) calc(14px + env(safe-area-inset-right, 0px))
+      padding: calc(8px + env(safe-area-inset-top, 0px)) calc(14px + env(safe-area-inset-right, 0px))
                calc(34px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px));
       display: flex; flex-direction: column; align-items: center; gap: 10px;
     }
@@ -220,7 +220,7 @@
     @keyframes flash { 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.9) saturate(1.4);} }
 
     #tray {
-      display: flex; flex-wrap: nowrap; gap: calc(var(--tray-cell, var(--cell)) * 0.25); align-items: flex-end;
+      display: flex; flex-wrap: wrap; align-content: flex-start; gap: calc(var(--tray-cell, var(--cell)) * 0.25); align-items: flex-end;
       justify-content: center;
       min-height: calc(var(--cell) * 2 + 20px);
       width: 100%; padding: 12px; background: var(--panel);
@@ -3849,7 +3849,7 @@
     duelNameBEl.textContent = duelPlayerName('B');
     scoreAEl.textContent = String(duel.score.A);
     scoreBEl.textContent = String(duel.score.B);
-    if (isOnline()) { duelNameAEl.textContent += online.side === 'A' ? ' (you)' : ''; duelNameBEl.textContent += online.side === 'B' ? ' (you)' : ''; }
+    if (isOnline()) { (online.side === 'A' ? duelNameAEl : duelNameBEl).textContent = 'You'; } // short: the middle text needs the room
     var cA = displayClock('A'), cB = displayClock('B');
     clockAEl.textContent = formatClock(cA);
     clockBEl.textContent = formatClock(cB);
@@ -3910,6 +3910,7 @@
     for (var qi = 0; qi < N * N; qi++) { var wasFilled = before[Math.floor(qi / N)][qi % N], nowFilled = board[Math.floor(qi / N)][qi % N]; if ((wasFilled || cellsPlaced.indexOf(qi) !== -1) && !nowFilled) { clearedIdx.push(qi); clearedCol.push(wasFilled || DUEL_COLORS[side]); } }
     feelMove({ placed: cellsPlaced, clearedCount: clearedIdx.length, cleared: clearedIdx, clearedColors: clearedCol, lines: res.cleared || 0 }, DUEL_COLORS[side]);
     if (res.cleared > 0) playClearSound(res.cleared, clearStreak); else playPlaceSound();
+    if (res.refilled) relockTray(); // a new batch: the box fits it, not the ten before
     if (res.refilled) setStatus('Refill: 4 new pieces' + (res.bonus ? ' · +10 s each' : '') + (res.incrementMs ? ' · +' + (res.incrementMs / 1000) + ' s for the move' : '') + '.', false);
     else setStatus('', false);
     if (res.over) { duelEnd(); return true; }
@@ -4100,6 +4101,7 @@
     locked = true; lockReason = 'duelsetup';
     renderBoard(); renderTray();
     duelTurnEl.textContent = 'Not connected';
+    duelNameAEl.textContent = duelPlayerName('A'); duelNameBEl.textContent = duelPlayerName('B'); // not the last game's names
     trophyAEl.hidden = trophyBEl.hidden = true; // the last game's winner is not this table's
     clockAEl.textContent = clockBEl.textContent = formatClock(duelClockMs());
     scoreAEl.textContent = String(duel.score.A); scoreBEl.textContent = String(duel.score.B);
@@ -4225,12 +4227,12 @@
     online.active = true; online.side = side; online.link = link; online.peer = peer;
     resetDuelScore();
     showOnlineRow('live');
-    onlineLiveMsgEl.textContent = 'Connected' + (online.code !== null ? ' · ' + ONLINE.toNumberString(online.code) : ' · public') + ' · you are ' + (side === 'A' ? 'Blue' : 'Red');
+    onlineLiveMsgEl.textContent = 'You are ' + (side === 'A' ? 'Blue' : 'Red') + (online.code !== null ? ' · ' + ONLINE.toNumberString(online.code) : ' · public');
     onlineNote('');
     logEvent('online_connected', { side: side, publicMatch: online.code === null });
     if (peer && link && ONLINE.describeConnection) {
       var conn = null; try { Object.keys(peer.connections || {}).forEach(function (k) { (peer.connections[k] || []).forEach(function (c) { if (c.open) conn = c; }); }); } catch (e) {}
-      ONLINE.describeConnection(conn).then(function (kind) { if (online.active && kind !== 'unknown') onlineLiveMsgEl.textContent += ' · ' + (kind === 'relay' ? 'via relay' : 'direct link'); logEvent('online_path', { kind: kind }); });
+      ONLINE.describeConnection(conn).then(function (kind) { if (online.active && kind !== 'unknown') onlineLiveMsgEl.textContent += ' · ' + (kind === 'relay' ? 'relay' : 'direct'); logEvent('online_path', { kind: kind }); });
     }
     link.onMessage(side === 'A' ? hostMessage : guestMessage);
     link.onClose(function () { onlineLost(); });
@@ -4327,7 +4329,7 @@
     history = [];
     locked = msg.phase !== 'play'; lockReason = msg.phase === 'over' ? 'duelover' : msg.phase === 'play' ? null : 'duelsetup';
     renderBoard(); renderTray(); rehold();
-    if (msg.moves === 0 || msg.levelIdx !== online.lastLevelIdx || !trayEl.style.maxHeight) { online.lastLevelIdx = msg.levelIdx; relockTray(); }
+    if (msg.moves === 0 || msg.levelIdx !== online.lastLevelIdx || msg.batchStart !== online.lastBatchStart || !trayEl.style.maxHeight) { online.lastLevelIdx = msg.levelIdx; online.lastBatchStart = msg.batchStart; relockTray(); }
     boardEl.classList.toggle('solved', !!msg.solvedFlash);
     setStatus(msg.status, msg.stuck);
     updateDuelBar();
@@ -6481,12 +6483,12 @@
   incSelectEl.addEventListener('change', function () {
     if (isOnline() && online.side === 'B') { guestSend({ t: 'inc', s: incSelectEl.value }); return; }
     setPref('bb_duel_inc', incSelectEl.value);
-    if (currentMode === 'duel' && !(duel.opponent === 'online' && !isOnline())) restartDuel('A');
+    if (currentMode === 'duel' && !(duel.opponent === 'online' && !isOnline())) restartDuel('A'); else renderClockBtn();
   });
   clockSelectEl.addEventListener('change', function () {
     if (isOnline() && online.side === 'B') { guestSend({ t: 'clock', s: clockSelectEl.value }); return; }
     setPref('bb_duel_clock', clockSelectEl.value);
-    if (currentMode === 'duel' && !(duel.opponent === 'online' && !isOnline())) restartDuel('A');
+    if (currentMode === 'duel' && !(duel.opponent === 'online' && !isOnline())) restartDuel('A'); else { renderClockBtn(); clockAEl.textContent = clockBEl.textContent = formatClock(duelClockMs()); }
   });
   presetSelectEl.addEventListener('change', function () {
     if (isOnline() && online.side === 'B') { guestSend({ t: 'presets', n: presetSelectEl.value }); return; }

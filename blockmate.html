@@ -154,12 +154,14 @@
     /* Result moment: the board dims, a card rises over it. */
     #board.dim .cell { opacity: 0.32; transition: opacity 400ms ease; }
     .result {
-      position: absolute; left: 6%; right: 6%; top: 50%; transform: translateY(-50%); z-index: 6;
+      position: fixed; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(88vw, 440px); z-index: 6;
       background: var(--panel); border: 1px solid var(--grid-line); border-radius: 16px; padding: 16px 14px;
       box-shadow: 0 18px 40px rgba(0,0,0,0.55); text-align: center; animation: resultIn 380ms cubic-bezier(.2,.9,.3,1.2);
+      touch-action: none;
     }
+    .result.peek { opacity: 0.08; transition: opacity 120ms ease; } /* press and hold the card to see the board under it */
     .result.fail { border-color: rgba(255,93,143,0.45); }
-    @keyframes resultIn { 0% { opacity: 0; transform: translateY(-40%) scale(0.94); } 100% { opacity: 1; transform: translateY(-50%) scale(1); } }
+    @keyframes resultIn { 0% { opacity: 0; transform: translate(-50%, 24px) scale(0.96); } 100% { opacity: 1; transform: translate(-50%, 0) scale(1); } }
     .r-close { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--grid-line); background: var(--panel-hi); color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 0; }
     .r-close:hover { color: var(--text); }
     .r-kicker { font-size: 11px; letter-spacing: 0.14em; font-weight: 800; color: var(--muted); padding: 0 28px; }
@@ -188,6 +190,7 @@
     /* A tray piece that has nowhere to go right now. */
     .tray-piece.stuck { opacity: 0.32; filter: saturate(0.2); }
     #board {
+      position: relative; /* cells measure their offsets from the board */
       display: grid;
       grid-template-columns: repeat(8, var(--cell));
       grid-template-rows: repeat(8, var(--cell));
@@ -243,11 +246,13 @@
        batch — see renderTray — so old slots don't pile up.) */
     .tray-piece.used { visibility: hidden; pointer-events: none; }
     /* Duel premoves: queued while the other side is on move. */
-    .tray-piece.premoved { opacity: 0.35; cursor: grab; position: relative; }
+    .tray-piece.premoved { cursor: grab; position: relative; }
+    .tray-piece.premoved .pcell { opacity: 0.35; } /* the blocks fade, not the wrap, so the order badge stays solid */
     .cell.premove { opacity: 0.45; position: relative; }
     /* Queue order, once there is more than one premove */
     .cell.premove[data-pm]::after { content: attr(data-pm); position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: calc(var(--cell) * 0.5); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.7); pointer-events: none; }
-    .tray-piece.premoved[data-pm]::after { content: attr(data-pm); position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: #0b0d12; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; opacity: 1; }
+    .tray-piece.premoved[data-pm]::after { content: attr(data-pm); position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: #0b0d12; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    html[data-theme="paper"] .cell.premove[data-pm]::after { color: #16233a; text-shadow: 0 1px 2px rgba(255,255,255,.7); } /* dark digits on the light board */
     .tray-piece.held {
       cursor: pointer; transform: translateY(-8px);
       box-shadow: 0 10px 22px rgba(76,201,240,0.35), inset 0 0 0 2px var(--accent);
@@ -481,17 +486,23 @@
     .vtabs { display: none; flex: 1 1 auto; min-width: 0; background: var(--panel); border: 1px solid var(--grid-line); border-radius: 10px; padding: 3px; gap: 2px; }
     .vtabs.show { display: flex; }
     .vtab {
-      flex: 1; min-width: 0; border: none; background: transparent; color: var(--muted);
+      flex: 1 1 auto; min-width: 0; padding-left: 3px; padding-right: 3px; border: none; background: transparent; color: var(--muted);
       font-weight: 700; font-size: 10.5px; padding: 7px 0; border-radius: 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       transition: background 120ms ease, color 120ms ease;
     }
-    .vtab.active { background: rgba(76,201,240,0.16); color: var(--accent); }
+    .vtab.active { background: rgba(76,201,240,0.16); color: var(--accent); flex: 0 0 auto; }
     .vtabs .preset-select { flex: 0 0 auto; margin-left: -2px; }
     /* Duel: everything on one line — mode · New · variants · clock. The level bar is not used there. */
     #app.duel .levelbar { display: none; }
     #app.duel .status { display: none; } /* the bar says whose move; results have a card */
     #app.duel .controls { gap: 4px; }
     #app.duel .vtabs { padding: 2px; gap: 1px; }
+    .ct-grid { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 10px; }
+    .ct-row { display: grid; grid-template-columns: 64px repeat(4, 1fr); gap: 4px; align-items: center; }
+    .ct-head span { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+    .ct-name { font-size: 11px; font-weight: 700; color: var(--text); }
+    .ct-cell { padding: 7px 2px; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .vcount { font-size: 8.5px; vertical-align: top; margin-left: 1px; opacity: 0.9; font-weight: 800; }
     button.ctrl.mode-btn, button.ctrl.clock-btn { padding: 8px 7px; font-size: 11px; white-space: nowrap; }
     button.ctrl.clock-btn { font-variant-numeric: tabular-nums; }
     @media (max-width: 400px) { button.ctrl.mode-btn, button.ctrl.clock-btn { padding: 8px 5px; font-size: 10.5px; } #app.duel .vtab { font-size: 10px; } }
@@ -674,17 +685,6 @@
 
     <div id="boardWrap">
       <div id="board"></div>
-      <div class="result" id="resultCard" hidden>
-        <button class="r-close" id="rClose" aria-label="Close">×</button>
-        <div class="r-kicker" id="rKicker">SURVIVED</div>
-        <div class="r-big" id="rBig">0:41</div>
-        <div class="r-delta" id="rDelta"></div>
-        <div class="r-line" id="rLine"></div>
-        <div class="r-fair" id="rFair"></div>
-        <div class="r-bar" id="rBarWrap"><b id="rBar"></b></div>
-        <div class="r-sub" id="rSub"></div>
-        <div class="r-actions" id="rActions"></div>
-      </div>
     </div>
 
     <div id="tray"></div>
@@ -700,6 +700,18 @@
     <!-- Web only: a scroll-into buffer under the tray so a drag that starts
          near the bottom edge doesn't trigger the phone's own gestures. -->
     <div class="bottom-buffer" id="bottomBuffer"></div>
+    <!-- The result card docks at the bottom of the screen, over the pool, so the board and the last move stay in view. -->
+    <div class="result" id="resultCard" hidden>
+        <button class="r-close" id="rClose" aria-label="Close">×</button>
+        <div class="r-kicker" id="rKicker">SURVIVED</div>
+        <div class="r-big" id="rBig">0:41</div>
+        <div class="r-delta" id="rDelta"></div>
+        <div class="r-line" id="rLine"></div>
+        <div class="r-fair" id="rFair"></div>
+        <div class="r-bar" id="rBarWrap"><b id="rBar"></b></div>
+        <div class="r-sub" id="rSub"></div>
+        <div class="r-actions" id="rActions"></div>
+      </div>
   </div>
 
   <div class="modal" role="dialog" aria-modal="true" id="settingsModal">
@@ -748,6 +760,14 @@
         <button class="toggle-btn" id="scoreToggleBtn" aria-pressed="false">Off</button>
       </div>
       <div class="setting-group">Duel</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Time controls</div><div class="setting-sub" id="clockPresetSub">60 s a game, 30 s in puzzle duels, no increment.</div></div>
+        <div class="dl-stack"><select class="clock-select" id="clockPresetSelect"><option value="standard">Standard</option><option value="comfortable">Comfortable</option><option value="blitz">Blitz</option><option value="custom">Custom</option></select><button class="toggle-btn" id="clockTableBtn">Edit</button></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">AI pause</div><div class="setting-sub">How long the AI waits before its move shows. Its thinking takes well under a second either way.</div></div>
+        <select class="clock-select" id="aiPauseSelect"><option value="instant">Instant</option><option value="short">Short</option><option value="natural">Natural</option></select>
+      </div>
       <div class="setting-row">
         <div><div class="setting-label">Premoves</div><div class="setting-sub">While the other side is on move, drop pieces to queue them (shown see-through). They play in order when your turn comes, if they still fit. Tap a queued piece to cancel them all.</div></div>
         <button class="toggle-btn" id="premoveToggleBtn" aria-pressed="true">On</button>
@@ -902,11 +922,20 @@
 
   <div class="modal" role="dialog" aria-modal="true" id="clockModal">
     <div class="modal-card">
-      <div class="modal-title"><span>Clock</span><button class="ctrl" id="clockCloseBtn">Close</button></div>
+      <div class="modal-title"><span id="clockModalTitle">Clock</span><button class="ctrl" id="clockCloseBtn">Close</button></div>
       <div class="pick-note">Time per player for the whole game.</div>
       <div class="chips" id="clockChips"></div>
       <div class="pick-note"><b>Increment</b> — added to your clock after each of your moves.</div>
       <div class="chips" id="incChips"></div>
+    </div>
+  </div>
+
+  <div class="modal" role="dialog" aria-modal="true" id="clockTableModal">
+    <div class="modal-card">
+      <div class="modal-title"><span>Time controls · <small id="clockTablePreset">Standard</small></span><button class="ctrl" id="clockTableCloseBtn">Close</button></div>
+      <div class="pick-note">Seconds for the whole game, and the increment added after each of your moves. Tap a cell to change it. Picking a time from the Duel screen changes that cell too.</div>
+      <div class="ct-grid" id="clockTableGrid"></div>
+      <div class="pass-actions builder-actions"><button class="ctrl" id="clockTableReset">Reset to Standard</button></div>
     </div>
   </div>
 
@@ -1414,7 +1443,7 @@
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~49% (Easy), minClears = 2, 16 solutions.
-      id: 218, mode: 'lose', name: 'Snag', difficulty: 'Medium', solutions: 13,
+      id: 218, mode: 'lose', name: 'Snag', difficulty: 'Hard', solutions: 13,
       board: ['##..#.#.', '.#######', '##..####', '#.##.##.', '.######.', '....####', '#..###..', '#.######'],
       pieces: ['quad_h', 'J_r180', 'L_r180', 'diag3']
     },
@@ -1432,7 +1461,7 @@
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~31% (Medium), minClears = 1, 28 solutions.
-      id: 219, mode: 'lose', name: 'Stalemate', difficulty: 'Hard', solutions: 28,
+      id: 219, mode: 'lose', name: 'Stalemate', difficulty: 'Medium', solutions: 28,
       board: ['.###.###', '###.#.#.', '####...#', '.##.##.#', '##..##.#', '#..####.', '.#.#####', '######.#'],
       pieces: ['diag2', 'J_r270', 'dom_v']
     },
@@ -2494,6 +2523,7 @@
     var moves = legalMoves(grid, pool);
     if (!moves.length) return null;
     if (level === 'easy') return pickRandom(moves, rng);
+    if (level === 'hard') return deepMove(game, rng, opts && opts.budgetMs); // bitboards; never touches the game's own dice
 
     var scored = moves.map(function (mv) {
       var g2 = applied(grid, pool[mv.idx].matrix, mv.top, mv.left);
@@ -2511,7 +2541,7 @@
       return scored[0].mv;
     }
 
-    return deepMove(game, rng, opts && opts.budgetMs);
+    return scored[0].mv;
   }
 
   var BIG = 100000;
@@ -3673,7 +3703,38 @@
   // Increment: seconds given back to the mover after every move (0 = off).
   // It stacks with the refill bonus / the puzzle-solved bonus.
   var INC_OPTIONS = [0, 1, 2, 3, 5, 10, 15];
-  function duelIncMs() { var v = parseInt(getPref('bb_duel_inc') || '0', 10); return INC_OPTIONS.indexOf(v) !== -1 ? v * 1000 : 0; }
+  // Time controls live in a table, one entry per opponent x variant
+  // (bb_clock_table). A preset fills the whole table; the clock button edits
+  // the current cell, which turns the preset into "custom". No entry = the
+  // old single preference (bb_duel_clock / bb_duel_inc), then the defaults.
+  var CLOCK_OPPS = ['easy', 'medium', 'hard', 'human', 'online'], CLOCK_VARIANTS = ['a', 'b', 's', 'l'];
+  var CLOCK_PRESETS = {
+    standard: null, // the defaults: 60 s (30 s in puzzle duels), no increment
+    comfortable: { easy: [[30, 1], [25, 1], [30, 3], [45, 3]], medium: [[45, 2], [30, 2], [45, 3], [60, 5]], hard: [[60, 3], [45, 2], [60, 5], [90, 5]], human: [[60, 3], [45, 3], [60, 5], [90, 5]], online: [[45, 2], [30, 2], [60, 3], [90, 5]] },
+    blitz: { easy: [[20, 1], [15, 1], [20, 2], [25, 3]], medium: [[20, 1], [20, 1], [25, 3], [30, 3]], hard: [[25, 2], [20, 1], [30, 3], [45, 3]], human: [[30, 2], [25, 2], [30, 3], [45, 3]], online: [[20, 2], [15, 2], [30, 3], [45, 3]] }
+  };
+  function clockTable() { return readJSON('bb_clock_table', {}, function (o) { return !!o && typeof o === 'object' && !Array.isArray(o); }); }
+  function clockKey(opp, v) { return (opp || duel.opponent) + '|' + (v || duel.variant); }
+  function clockEntry(opp, v) { return clockTable()[clockKey(opp, v)] || null; }
+  function setClockEntry(opp, v, c, i) {
+    var t = clockTable(), e = t[clockKey(opp, v)] || {};
+    if (c !== undefined && c !== null) e.c = c;
+    if (i !== undefined && i !== null) e.i = i;
+    t[clockKey(opp, v)] = e; writeJSON('bb_clock_table', t); setPref('bb_clock_preset', 'custom');
+  }
+  function clockPreset() { var p = getPref('bb_clock_preset'); return CLOCK_PRESETS.hasOwnProperty(p) || p === 'custom' ? p : (Object.keys(clockTable()).length ? 'custom' : 'standard'); }
+  function applyClockPreset(name) {
+    var t = {};
+    if (CLOCK_PRESETS[name]) CLOCK_OPPS.forEach(function (o) { CLOCK_VARIANTS.forEach(function (v, k) { var cell = CLOCK_PRESETS[name][o][k]; t[o + '|' + v] = { c: cell[0], i: cell[1] }; }); });
+    writeJSON('bb_clock_table', t); setPref('bb_clock_preset', name);
+    if (name === 'standard') { setPref('bb_duel_clock', ''); setPref('bb_duel_inc', ''); }
+    if (clockSelectEl.options.length) { clockSelectEl.value = String(clockSeconds()); incSelectEl.value = String(duelIncMs() / 1000); }
+    if (typeof renderClockBtn === 'function' && currentMode === 'duel') renderClockBtn();
+  }
+  function duelIncMs() {
+    var e = clockEntry(); if (e && e.i !== undefined && INC_OPTIONS.indexOf(e.i) !== -1) return e.i * 1000;
+    var v = parseInt(getPref('bb_duel_inc') || '0', 10); return INC_OPTIONS.indexOf(v) !== -1 ? v * 1000 : 0;
+  }
   function buildIncSelect() {
     incSelectEl.innerHTML = '';
     INC_OPTIONS.forEach(function (sec) { var o = document.createElement('option'); o.value = String(sec); o.textContent = sec ? '+' + sec + 's' : 'no inc'; incSelectEl.appendChild(o); });
@@ -3681,6 +3742,8 @@
   }
   function clockLabel(sec) { return !sec ? '∞' : sec < 120 ? sec + 's' : (sec / 60) + 'm'; }
   function duelClockMs() {
+    var e = clockEntry();
+    if (e && e.c !== undefined && CLOCK_OPTIONS.indexOf(e.c) !== -1) return e.c === 0 ? Infinity : e.c * 1000;
     var pref = parseInt(getPref('bb_duel_clock') || '', 10);
     if (pref === 0) return Infinity; // no clock
     if (CLOCK_OPTIONS.indexOf(pref) !== -1) return pref * 1000;
@@ -3688,6 +3751,8 @@
   }
   // The clock as a setting value: seconds, 0 for none (Infinity doesn't survive JSON or a <select>).
   function clockSeconds() { var ms = duelClockMs(); return ms === Infinity ? 0 : ms / 1000; }
+  // Guest: the host's clock shows on this screen without touching this phone's preset.
+  function mirrorHostClock(c, i) { var t = clockTable(), k = clockKey('online', duel.variant), e = t[k] || {}; if (c !== undefined && c !== null) e.c = c; if (i !== undefined && i !== null) e.i = i; t[k] = e; writeJSON('bb_clock_table', t); }
   function clockFromWire(ms) { return ms === -1 || ms === null ? Infinity : ms; }
   function clockToWire(ms) { return ms === Infinity ? -1 : ms; }
   function starterPenaltyFor(clockMs) { return clockMs >= 30000 ? 5000 : Math.round(clockMs * 0.1); }
@@ -3967,7 +4032,7 @@
 
   function scheduleComputerMove() {
     if (duel.aiTimer) clearTimeout(duel.aiTimer);
-    var think = duelIsPuzzle() ? PUZZLE_AI_THINK_MS[duel.opponent] || 3000 : 550;
+    var think = duelIsPuzzle() ? PUZZLE_AI_THINK_MS[duel.opponent] || 3000 : aiPauseMs();
     duel.aiTimer = setTimeout(function () {
       duel.aiTimer = null;
       var g = duel.game;
@@ -4085,7 +4150,7 @@
     VARIANTS.forEach(function (v) {
       var b = document.createElement('button');
       b.className = 'vtab' + (v.id === duel.variant ? ' active' : '');
-      b.textContent = v.id === 'b' && duel.variant === 'b' ? 'Filled ' + duelBPresets() : v.label; b.title = v.title; b.setAttribute('data-variant', v.id);
+      if (v.id === 'b' && duel.variant === 'b') { b.textContent = 'Filled '; var vc = document.createElement('span'); vc.className = 'vcount'; vc.textContent = String(duelBPresets()); b.appendChild(vc); } else b.textContent = v.label; b.title = v.title; b.setAttribute('data-variant', v.id);
       b.addEventListener('click', function () {
         if (duel.variant === v.id) { if (v.id === 'b') openPresetPicker(); return; }
         if (isOnline() && online.side === 'B') { guestSend({ t: 'variant', v: v.id }); return; }
@@ -4327,7 +4392,7 @@
   // Guest ← host.
   function guestMessage(msg) {
     if (msg.t === 'bye') { onlineLost(); return; }
-    if (msg.t === 'countdown') { if (!VARIANTS.some(function (x) { return x.id === msg.variant; })) return; duel.variant = msg.variant; msg.presets = clampPresets(msg.presets); setPref('bb_duel_presets', String(msg.presets)); renderVariantTabs(); if (msg.clock !== undefined && msg.clock !== null) { setPref('bb_duel_clock', String(msg.clock)); clockSelectEl.value = String(msg.clock); } if (msg.inc !== undefined) { setPref('bb_duel_inc', String(msg.inc)); incSelectEl.value = String(msg.inc); } startConnectCountdown(msg.variant, msg.presets, msg.secs, msg.by || null); return; }
+    if (msg.t === 'countdown') { if (!VARIANTS.some(function (x) { return x.id === msg.variant; })) return; duel.variant = msg.variant; msg.presets = clampPresets(msg.presets); setPref('bb_duel_presets', String(msg.presets)); renderVariantTabs(); if (msg.clock !== undefined && msg.clock !== null) { mirrorHostClock(msg.clock, msg.inc); clockSelectEl.value = String(msg.clock); } if (msg.inc !== undefined) { incSelectEl.value = String(msg.inc); } startConnectCountdown(msg.variant, msg.presets, msg.secs, msg.by || null); return; }
     if (msg.t !== 'state') return;
     // A frame we can't render is dropped, not fatal.
     if (!Array.isArray(msg.board) || msg.board.length !== N || !msg.board.every(function (row) { return Array.isArray(row) && row.length === N; })) return;
@@ -4347,9 +4412,9 @@
     if (duel.variant !== msg.variant) { duel.variant = msg.variant; renderVariantTabs(); }
     msg.presets = clampPresets(msg.presets);
     if (String(duelBPresets()) !== String(msg.presets)) { setPref('bb_duel_presets', String(msg.presets)); presetSelectEl.value = String(msg.presets); renderVariantTabs(); }
-    if (msg.clock !== undefined && msg.clock !== null && String(clockSeconds()) !== String(msg.clock)) { setPref('bb_duel_clock', String(msg.clock)); clockSelectEl.value = String(msg.clock); }
+    if (msg.clock !== undefined && msg.clock !== null && String(clockSeconds()) !== String(msg.clock)) { mirrorHostClock(msg.clock, msg.inc); clockSelectEl.value = String(msg.clock); }
     if (msg.clocks) msg.clocks = { A: clockFromWire(msg.clocks.A), B: clockFromWire(msg.clocks.B) };
-    if (msg.inc !== undefined && String(duelIncMs() / 1000) !== String(msg.inc)) { setPref('bb_duel_inc', String(msg.inc)); incSelectEl.value = String(msg.inc); }
+    if (msg.inc !== undefined && String(duelIncMs() / 1000) !== String(msg.inc)) { mirrorHostClock(msg.clock, msg.inc); incSelectEl.value = String(msg.inc); }
     duel.score = msg.score; duel.lastStarter = msg.lastStarter;
     duel.game = {
       remote: true, phase: msg.phase, turn: msg.turn, starter: msg.starter, drawn: msg.drawn, clocks: msg.clocks,
@@ -4404,8 +4469,8 @@
     if (msg.t === 'replay') { if (duel.lastLevelId && duelIsPuzzle()) { duel.replayLevelId = duel.lastLevelId; newDuel(); } return; }
     if (msg.t === 'newgame') { if (duel.countdownTimer) return; if (g && g.phase === 'play') restartDuel('B'); else if (!g || g.phase === 'over') newDuel(); return; }
     if (msg.t === 'variant') { if (VARIANTS.some(function (v) { return v.id === msg.v; })) { duel.variant = msg.v; setPref('bb_duel_variant', msg.v); resetDuelScore(); renderVariantTabs(); restartDuel('B'); } return; }
-    if (msg.t === 'inc') { if (INC_OPTIONS.indexOf(parseInt(msg.s, 10)) !== -1) { setPref('bb_duel_inc', String(parseInt(msg.s, 10))); incSelectEl.value = String(parseInt(msg.s, 10)); restartDuel('B'); } return; }
-    if (msg.t === 'clock') { if (CLOCK_OPTIONS.indexOf(parseInt(msg.s, 10)) !== -1) { setPref('bb_duel_clock', String(parseInt(msg.s, 10))); clockSelectEl.value = String(parseInt(msg.s, 10)); restartDuel('B'); } return; }
+    if (msg.t === 'inc') { if (INC_OPTIONS.indexOf(parseInt(msg.s, 10)) !== -1) { setClockEntry(null, null, undefined, parseInt(msg.s, 10)); setPref('bb_duel_inc', String(parseInt(msg.s, 10))); incSelectEl.value = String(parseInt(msg.s, 10)); restartDuel('B'); } return; }
+    if (msg.t === 'clock') { if (CLOCK_OPTIONS.indexOf(parseInt(msg.s, 10)) !== -1) { setClockEntry(null, null, parseInt(msg.s, 10), undefined); setPref('bb_duel_clock', String(parseInt(msg.s, 10))); clockSelectEl.value = String(parseInt(msg.s, 10)); restartDuel('B'); } return; }
     if (msg.t === 'presets') { setPref('bb_duel_presets', String(clampPresets(msg.n))); presetSelectEl.value = String(duelBPresets()); renderVariantTabs(); if (duel.variant === 'b') restartDuel('B'); return; }
   }
   function guestSend(obj) { if (isOnline() && online.side === 'B' && online.link) online.link.send(obj); }
@@ -4819,6 +4884,7 @@
     diffTag.className = 'leveltag ' + lvl.difficulty;
     renderBoard();
     renderTray();
+    fitCellSize(); // measured with THIS level's pieces on the tray (at boot the tray was still empty when the mode fit ran)
     relockTray();
     setStatus('', false);
     maybeStartTutorial();
@@ -4847,7 +4913,7 @@
       rEl('rSub').textContent = o.bar ? o.bar.text : (o.sub || '');
       var acts = rEl('rActions'); acts.innerHTML = '';
       (o.actions || []).forEach(function (a) { var b = document.createElement('button'); b.className = 'ctrl' + (a.primary ? ' primary' : ''); b.textContent = a.label; b.setAttribute('data-r', a.id || a.label); b.addEventListener('click', function (e) { e.stopPropagation(); a.fn(); }); acts.appendChild(b); });
-      boardEl.classList.add('dim');
+      // the board stays bright: the card sits over the pool, and the last move is the thing to look at
       resultCardEl.hidden = false;
       if (o.bar) setTimeout(function () { rEl('rBar').style.width = Math.round(o.bar.pct * 100) + '%'; }, 60);
     }, o.kind === 'fail' ? 260 : 420);
@@ -5333,6 +5399,11 @@
   // board or the pool: dropped elsewhere it keeps its number, dropped back
   // on the pool (or anywhere it doesn't fit) it leaves the queue and the
   // rest close up. Settings → Premoves turns it off.
+  // How long the AI waits before its move shows (Settings → Duel → AI pause).
+  // Hard's search itself is under 150 ms; the rest is for the human eye.
+  var AI_PAUSE = { instant: 0, short: 550, natural: 1200 };
+  function aiPause() { var v = getPref('bb_ai_pause'); return AI_PAUSE[v] !== undefined ? v : 'short'; }
+  function aiPauseMs() { return AI_PAUSE[aiPause()]; }
   function premovesEnabled() { return getPref('bb_premove') !== '0'; }
   function premoveList() { return duel.premoves || (duel.premoves = []); }
   function isMyTurnNow() {
@@ -5376,8 +5447,18 @@
     renderBoard(); renderTray();
     if (msg) setStatus(msg, false);
   }
+  // Drop queued pieces that can't play any more (their spot got taken, the
+  // piece got used, a refill replaced it); the rest keep their order.
+  function prunePremoves() {
+    var list = premoveList(); if (!list.length) return 0;
+    var keep = list.filter(function (pm) { var p = pieces[pm.idx]; return p && !p.used && p.key === pm.key && fits(p.matrix, pm.top, pm.left); });
+    var dropped = list.length - keep.length;
+    if (dropped) { duel.premoves = keep; setStatus(dropped === 1 ? 'A premove was dropped — its spot is taken.' : dropped + ' premoves were dropped — their spots are taken.', false); renderTray(); }
+    return dropped;
+  }
   function paintPremoves() {
     if (currentMode !== 'duel' || !premoveList().length) return;
+    prunePremoves();
     var mine = DUEL_COLORS[mySide()];
     var many = premoveList().length > 1;
     premoveList().forEach(function (pm, k) { pm.cells.forEach(function (i) { if (cellEls[i]) { cellEls[i].classList.add('premove'); cellEls[i].style.backgroundColor = mine; if (many) cellEls[i].setAttribute('data-pm', String(k + 1)); } }); });
@@ -5390,10 +5471,10 @@
     duel.premoveTimer = setTimeout(function () {
       duel.premoveTimer = null;
       if (!premoveList().length || !isMyTurnNow()) return;
+      prunePremoves(); // the ones that no longer fit go; the first that still fits plays
+      if (!premoveList().length) { renderBoard(); return; }
       var pm = premoveList().shift();
-      var p = pieces[pm.idx];
-      if (!p || p.used || p.key !== pm.key || !fits(p.matrix, pm.top, pm.left)) { clearPremoves('Premove cancelled — it no longer fits.'); return; }
-      if (!placePiece(pm.idx, pm.top, pm.left)) clearPremoves('Premove cancelled.');
+      if (!placePiece(pm.idx, pm.top, pm.left)) { renderBoard(); renderTray(); setStatus('Premove cancelled.', false); }
     }, 250);
   }
 
@@ -5817,7 +5898,11 @@
   var statusHeldBefore = null; // status text to restore when carry mode ends
   var CLICK_MOVE_THRESHOLD = 6; // px
 
-  function cellSize() { return cellEls[0].getBoundingClientRect().width; }
+  // Layout sizes, not painted ones: a cell mid "pop" (the landing animation
+  // scales it for 240 ms) must not skew where a press or a drop lands.
+  function cellSize() { return cellEls[0].offsetWidth; }
+  function cellPitch() { return { x: cellEls[1].offsetLeft - cellEls[0].offsetLeft || cellEls[0].offsetWidth, y: cellEls[N].offsetTop - cellEls[0].offsetTop || cellEls[0].offsetHeight }; }
+  function boardOrigin() { var r = boardEl.getBoundingClientRect(); return { x: r.left + boardEl.clientLeft + cellEls[0].offsetLeft, y: r.top + boardEl.clientTop + cellEls[0].offsetTop }; }
   function gapSize() { return parseFloat(getComputedStyle(boardEl).gap) || 4; }
 
   function attachDrag(el, idx) {
@@ -5865,7 +5950,7 @@
         if (d < best) { best = d; grabR = r; grabC = c; }
       }
     buildGhostFor(p, size, gap);
-    drag = { idx: idx, grabR: grabR, grabC: grabC, size: size, gap: gap, lift: liftFor(e, size) };
+    drag = { idx: idx, grabR: grabR, grabC: grabC, size: size, gap: gap, lift: liftFor(e, size), y0: e.clientY };
     moveGhost(e.clientX, e.clientY);
     showHints(targetAnchor(e.clientX, e.clientY));
     return true;
@@ -5884,17 +5969,26 @@
   // On touch the piece rides a little above the finger, so the finger
   // never hides the cells it's about to land on. The drop target uses the
   // same lift, so what you see is where it goes. Mouse: no lift.
-  function liftFor(e, size) { return e && e.pointerType === 'touch' ? Math.round(size * 1.3) : 0; }
+  // Touch: 1.5 cells at pickup, rising to 2 cells as the finger travels up
+  // from where it picked the piece (so a piece headed for the top rows
+  // clears the finger even more). Capped and gentle, so the drop target
+  // (which uses the same lift) stays predictable. Mouse: no lift.
+  var LIFT_BASE = 1.5, LIFT_EXTRA = 0.5, LIFT_RANGE_PX = 220;
+  function liftFor(e, size, risePx) {
+    if (!e || e.pointerType !== 'touch') return 0;
+    var t = Math.max(0, Math.min(1, (risePx || 0) / LIFT_RANGE_PX));
+    return Math.round(size * (LIFT_BASE + LIFT_EXTRA * t));
+  }
+  function updateLift(e) { if (drag && drag.lift && drag.y0 !== undefined) drag.lift = liftFor(e, drag.size, drag.y0 - e.clientY); }
   function moveGhost(x, y) {
     var step = drag.size + drag.gap, lift = drag.lift || 0;
     ghostEl.style.transform = 'translate(' + (x - drag.grabC * step - drag.size / 2) + 'px,' + (y - lift - drag.grabR * step - drag.size / 2) + 'px)';
   }
 
   function targetAnchor(x, y) {
-    var rect = boardEl.getBoundingClientRect();
-    var step = drag.size + drag.gap, pad = drag.gap, lift = drag.lift || 0;
-    var col = Math.floor((x - rect.left - pad) / step);
-    var row = Math.floor((y - lift - rect.top - pad) / step);
+    var o = boardOrigin(), p = cellPitch(), lift = drag.lift || 0;
+    var col = Math.floor((x - o.x) / p.x);
+    var row = Math.floor((y - lift - o.y) / p.y);
     return { top: row - drag.grabR, left: col - drag.grabC };
   }
 
@@ -5916,7 +6010,7 @@
       }
   }
 
-  function onMove(e) { if (!drag) return; e.preventDefault(); moveGhost(e.clientX, e.clientY); showHints(targetAnchor(e.clientX, e.clientY)); }
+  function onMove(e) { if (!drag) return; e.preventDefault(); updateLift(e); moveGhost(e.clientX, e.clientY); showHints(targetAnchor(e.clientX, e.clientY)); }
 
   function onUp(e) {
     if (!drag) return;
@@ -5978,7 +6072,7 @@
   }
   function premoveRemoved() { renderBoard(); renderTray(); var n = premoveList().length; setStatus(n ? 'Premove removed — ' + n + ' still queued.' : 'Premove removed.', false); }
 
-  function onCarryMove(e) { if (!drag) return; moveGhost(e.clientX, e.clientY); showHints(targetAnchor(e.clientX, e.clientY)); }
+  function onCarryMove(e) { if (!drag) return; updateLift(e); moveGhost(e.clientX, e.clientY); showHints(targetAnchor(e.clientX, e.clientY)); }
 
   function onCarryKey(e) { if (e.key === 'Escape') exitCarryMode(); }
 
@@ -6060,17 +6154,25 @@
   // ---- Tap-a-cell piece picker: click an empty board cell to pop up every
   // unused piece; picking one enters carry mode for it (same as picking it
   // from the tray), so you then place it with a normal board click. ----
+  // Which cell is under (x, y)? Measured from the cells themselves (first
+  // cell's corner, the pitch between neighbours), so the board's padding,
+  // border or a tight layout can't skew it — the old arithmetic from the
+  // board's edge drifted a whole column on some sizes.
   function boardCellAt(x, y) {
-    var rect = boardEl.getBoundingClientRect();
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) return null;
-    var size = cellSize(), gap = gapSize(), step = size + gap;
-    var col = Math.floor((x - rect.left - gap) / step);
-    var row = Math.floor((y - rect.top - gap) / step);
+    var o = boardOrigin(), p = cellPitch();
+    var col = Math.floor((x - o.x) / p.x), row = Math.floor((y - o.y) / p.y);
     if (row < 0 || row >= N || col < 0 || col >= N) return null;
     return { row: row, col: col };
   }
 
   function onBoardPointerDown(e) {
+    // Duel: a press on a queued premove lifts it, even while the last move's
+    // animation still runs (lifting places nothing, so nothing can double up).
+    if (currentMode === 'duel' && !locked && premoveList().length) {
+      var pc0 = boardCellAt(e.clientX, e.clientY);
+      var pk0 = pc0 ? premoveAtCell(pc0.row * N + pc0.col) : -1;
+      if (pk0 !== -1) { e.preventDefault(); liftPremove(pk0, pc0, e); return; }
+    }
     if (animating) return;
     // While the level is decided, tapping the board is the fast path onward:
     // a win moves to the next level, a fail resets this one. Last level of a
@@ -6082,12 +6184,6 @@
       if (lockReason === 'fail') { loadLevel(modeIndex); return; }
       if (lockReason === 'win') goNext();
       return;
-    }
-    // Duel: a press on a queued premove lifts it (it keeps its place in the order if it lands again).
-    if (currentMode === 'duel' && premoveList().length) {
-      var pc = boardCellAt(e.clientX, e.clientY);
-      var pk = pc ? premoveAtCell(pc.row * N + pc.col) : -1;
-      if (pk !== -1) { e.preventDefault(); liftPremove(pk, pc, e); return; }
     }
     // Duel: not your turn → the board is the computer's / the other phone's for a moment.
     if (currentMode === 'duel' && duel.game && duelIsComputer(duel.game.turn)) return;
@@ -6125,7 +6221,7 @@
     renderBoard();
     var size = cellSize(), gap = gapSize();
     buildGhostFor(p, size, gap);
-    drag = { idx: pm.idx, grabR: cell.row - pm.top, grabC: cell.col - pm.left, size: size, gap: gap, lift: liftFor(e, size), premoveAt: k };
+    drag = { idx: pm.idx, grabR: cell.row - pm.top, grabC: cell.col - pm.left, size: size, gap: gap, lift: liftFor(e, size), y0: e.clientY, premoveAt: k };
     moveGhost(e.clientX, e.clientY);
     showHints(targetAnchor(e.clientX, e.clientY));
     pointerStart = { x: e.clientX, y: e.clientY };
@@ -6158,7 +6254,7 @@
 
     var size = cellSize(), gap = gapSize();
     buildGhostFor(p, size, gap);
-    drag = { idx: idx, grabR: cell.row - top, grabC: cell.col - left, size: size, gap: gap, lift: liftFor(e, size) };
+    drag = { idx: idx, grabR: cell.row - top, grabC: cell.col - left, size: size, gap: gap, lift: liftFor(e, size), y0: e.clientY };
     moveGhost(e.clientX, e.clientY);
     showHints(targetAnchor(e.clientX, e.clientY));
     enterCarryMode(idx);
@@ -6367,8 +6463,65 @@
   function advancedOpen() { var p = getPref('bb_settings_adv'); return p === '1' || (location.hash === '#test' && p !== '0'); }
   function renderAdvanced() { var open = advancedOpen(); settingsAdvancedEl.hidden = !open; advancedBtn.textContent = open ? 'Hide' : 'Show'; advancedBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
   advancedBtn.addEventListener('click', function () { setPref('bb_settings_adv', advancedOpen() ? '0' : '1'); renderAdvanced(); });
+  var clockPresetSelectEl = document.getElementById('clockPresetSelect');
+  var clockTableModalEl = document.getElementById('clockTableModal');
+  function presetLabel(p) { return p === 'comfortable' ? 'Comfortable' : p === 'blitz' ? 'Blitz' : p === 'custom' ? 'Custom' : 'Standard'; }
+  clockPresetSelectEl.addEventListener('change', function () {
+    var v = clockPresetSelectEl.value;
+    if (v === 'custom') { openClockTable(); return; }
+    applyClockPreset(v); renderSettings(); logEvent('clock_preset', { p: v });
+  });
+  document.getElementById('clockTableBtn').addEventListener('click', openClockTable);
+  bindModalClose(clockTableModalEl, document.getElementById('clockTableCloseBtn'));
+  document.getElementById('clockTableReset').addEventListener('click', function () { applyClockPreset('standard'); renderClockTable(); renderSettings(); });
+  function cellText(opp, v) {
+    var e = clockEntry(opp, v) || {};
+    var c = e.c !== undefined ? e.c : (v === 's' || v === 'l' ? 30 : 60), i = e.i !== undefined ? e.i : 0;
+    return clockLabel(c) + (i ? ' +' + i : '');
+  }
+  function renderClockTable() {
+    var grid = document.getElementById('clockTableGrid'); grid.innerHTML = '';
+    var head = document.createElement('div'); head.className = 'ct-row ct-head'; head.appendChild(document.createElement('span'));
+    [['a', 'Empty'], ['b', 'Filled'], ['s', 'Survive'], ['l', 'Lose']].forEach(function (v) { var s = document.createElement('span'); s.textContent = v[1]; head.appendChild(s); });
+    grid.appendChild(head);
+    CLOCK_OPPS.forEach(function (opp) {
+      var row = document.createElement('div'); row.className = 'ct-row';
+      var name = document.createElement('span'); name.className = 'ct-name'; name.textContent = (opponentInfo(opp).short || opponentInfo(opp).label); row.appendChild(name);
+      CLOCK_VARIANTS.forEach(function (v) {
+        var b = document.createElement('button'); b.className = 'chip-btn ct-cell'; b.textContent = cellText(opp, v); b.setAttribute('data-cell', opp + '|' + v);
+        b.addEventListener('click', function () { openClockPickerFor(opp, v); });
+        row.appendChild(b);
+      });
+      grid.appendChild(row);
+    });
+    document.getElementById('clockTablePreset').textContent = presetLabel(clockPreset());
+  }
+  function openClockTable() { renderClockTable(); openModal(clockTableModalEl); }
+  // The clock picker aimed at one table cell: no restart, no selects, back to the table after.
+  function openClockPickerFor(opp, v) {
+    var cc = document.getElementById('clockChips'), ic = document.getElementById('incChips'); cc.innerHTML = ''; ic.innerHTML = '';
+    var e = clockEntry(opp, v) || {}, curClock = e.c !== undefined ? e.c : (v === 's' || v === 'l' ? 30 : 60), curInc = e.i !== undefined ? e.i : 0;
+    document.getElementById('clockModalTitle').textContent = (opponentInfo(opp).short || opponentInfo(opp).label) + ' · ' + ({ a: 'Empty', b: 'Filled', s: 'Survive', l: 'Lose' })[v];
+    CLOCK_OPTIONS.forEach(function (sec) {
+      var b = document.createElement('button'); b.className = 'chip-btn' + (sec === curClock ? ' active' : ''); b.textContent = clockLabel(sec); b.setAttribute('data-clock', String(sec));
+      b.addEventListener('click', function () { setClockEntry(opp, v, sec, undefined); closeModal(clockModalEl); if (currentMode === 'duel') renderClockBtn(); openClockTable(); renderSettings(); });
+      cc.appendChild(b);
+    });
+    INC_OPTIONS.forEach(function (sec) {
+      var b = document.createElement('button'); b.className = 'chip-btn' + (sec === curInc ? ' active' : ''); b.textContent = sec ? '+' + sec + 's' : 'no inc'; b.setAttribute('data-inc', String(sec));
+      b.addEventListener('click', function () { setClockEntry(opp, v, undefined, sec); closeModal(clockModalEl); if (currentMode === 'duel') renderClockBtn(); openClockTable(); renderSettings(); });
+      ic.appendChild(b);
+    });
+    closeModal(clockTableModalEl);
+    openModal(clockModalEl);
+  }
+  var aiPauseSelectEl = document.getElementById('aiPauseSelect');
+  aiPauseSelectEl.addEventListener('change', function () { setPref('bb_ai_pause', aiPauseSelectEl.value); logEvent('ai_pause', { v: aiPause() }); });
   function renderSettings() {
     renderAdvanced();
+    aiPauseSelectEl.value = aiPause();
+    clockPresetSelectEl.value = clockPreset();
+    document.getElementById('clockPresetSub').textContent = clockPreset() === 'standard' ? '60 s a game, 30 s in puzzle duels, no increment.' : clockPreset() === 'comfortable' ? 'Room to think: 25–90 s with +1 to +5 s a move, longer against Hard and in Lose.' : clockPreset() === 'blitz' ? 'Fast and tense: 15–45 s with small increments.' : 'Your own table — tap Edit to change a cell.';
     setToggleUI(soundToggleBtn, soundEnabled);
     setToggleUI(scoreToggleBtn, scoreEnabled);
     setToggleUI(hintPulseToggleBtn, hintPulseEnabled());
@@ -6483,7 +6636,7 @@
     if (id === 'online') { onlineSetup(); return; }
     newDuel();
   }
-  function renderModeBtn() { var o = opponentInfo(duel.opponent); modeBtn.textContent = (o.short || o.label) + ' ▾'; }
+  function renderModeBtn() { var o = opponentInfo(duel.opponent); var narrow = window.innerWidth <= 370 && /^AI /.test(o.label); modeBtn.textContent = (narrow ? o.label.slice(3) : (o.short || o.label)) + ' ▾'; } // 360 px: 'Medium ▾' leaves the variant tabs their room
   function renderClockBtn() { var inc = duelIncMs() / 1000; clockBtn.textContent = '⏱ ' + clockLabel(clockSeconds()) + (inc ? ' +' + inc + 's' : ''); }
   function openModePicker() {
     var list = document.getElementById('modeList'); list.innerHTML = '';
@@ -6508,6 +6661,7 @@
   }
   function openClockPicker() {
     var cc = document.getElementById('clockChips'), ic = document.getElementById('incChips'); cc.innerHTML = ''; ic.innerHTML = '';
+    document.getElementById('clockModalTitle').textContent = 'Clock';
     var curClock = clockSeconds(), curInc = duelIncMs() / 1000;
     CLOCK_OPTIONS.forEach(function (sec) {
       var b = document.createElement('button'); b.className = 'chip-btn' + (sec === curClock ? ' active' : ''); b.textContent = clockLabel(sec); b.setAttribute('data-clock', String(sec));
@@ -6526,6 +6680,13 @@
   bindModalClose(modeModalEl, document.getElementById('modeCloseBtn'));
   bindModalClose(clockModalEl, document.getElementById('clockCloseBtn'));
   bindModalClose(presetModalEl, document.getElementById('presetCloseBtn'));
+  // Press and hold the result card (not its buttons) to see the board under it.
+  (function () {
+    function peekOff() { resultCardEl.classList.remove('peek'); }
+    resultCardEl.addEventListener('pointerdown', function (e) { if (e.target.closest('button')) return; resultCardEl.classList.add('peek'); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { resultCardEl.addEventListener(ev, peekOff); });
+    window.addEventListener('pointerup', peekOff);
+  })();
   levelSelect.addEventListener('change', function () {
     if (currentMode === 'duel') { chooseOpponent(levelSelect.value); return; }
     loadLevel(parseInt(levelSelect.value, 10));
@@ -6547,12 +6708,12 @@
   nextBtn.addEventListener('click', goNext);
   incSelectEl.addEventListener('change', function () {
     if (isOnline() && online.side === 'B') { guestSend({ t: 'inc', s: incSelectEl.value }); return; }
-    setPref('bb_duel_inc', incSelectEl.value);
+    setClockEntry(null, null, undefined, parseInt(incSelectEl.value, 10)); setPref('bb_duel_inc', incSelectEl.value);
     if (currentMode === 'duel' && !(duel.opponent === 'online' && !isOnline())) restartDuel('A'); else renderClockBtn();
   });
   clockSelectEl.addEventListener('change', function () {
     if (isOnline() && online.side === 'B') { guestSend({ t: 'clock', s: clockSelectEl.value }); return; }
-    setPref('bb_duel_clock', clockSelectEl.value);
+    setClockEntry(null, null, parseInt(clockSelectEl.value, 10), undefined); setPref('bb_duel_clock', clockSelectEl.value);
     if (currentMode === 'duel' && !(duel.opponent === 'online' && !isOnline())) restartDuel('A'); else { renderClockBtn(); clockAEl.textContent = clockBEl.textContent = formatClock(duelClockMs()); }
   });
   presetSelectEl.addEventListener('change', function () {
@@ -6652,7 +6813,7 @@
     if (popupEl.classList.contains('show')) { hidePiecePopup(); return true; }
     if (drag) { exitCarryModeIfAny(); return true; }
     if (!resultCardEl.hidden) { hideResultCard(); return true; }
-    var modals = [modeModalEl, clockModalEl, presetModalEl, bugModalEl, inboxModalEl, progressModalEl, tutorialModalEl, mapModalEl, document.getElementById('builderModal'), document.getElementById('adminModal'), settingsModalEl];
+    var modals = [modeModalEl, clockModalEl, clockTableModalEl, presetModalEl, bugModalEl, inboxModalEl, progressModalEl, tutorialModalEl, mapModalEl, document.getElementById('builderModal'), document.getElementById('adminModal'), settingsModalEl];
     for (var i = 0; i < modals.length; i++) {
       if (modals[i] && modals[i].classList.contains('show')) { closeModal(modals[i]); return true; }
     }
@@ -6666,7 +6827,7 @@
       });
     }
   } catch (e) {}
-  window.addEventListener('resize', function () { fitCellSize(); relockTray(); });
+  window.addEventListener('resize', function () { fitCellSize(); relockTray(); if (currentMode === 'duel') renderModeBtn(); });
 
   // ---------- Boot ----------
   JUICE.init({ boardEl: boardEl, wrapEl: document.getElementById('boardWrap'), cells: function () { return cellEls; } });
@@ -6702,7 +6863,7 @@
     window.__bbTest = {
       place: function (idx, top, left) { return placePiece(idx, top, left); },
       state: function () { return { locked: locked, lockReason: lockReason, used: pieces.map(function (p) { return p.used; }) }; },
-      duel: function () { var g = duel.game; return g ? { phase: g.phase, turn: g.turn, starter: g.starter, drawn: g.drawn, pool: g.pool.length, clocks: g.clocks, winner: g.winner, loser: g.loser, reason: g.reason, moves: g.moves, opponent: duel.opponent, variant: duel.variant, levelIdx: g.levelIdx, solved: g.solved, presets: board.reduce(function (n, row) { return n + row.filter(function (c) { return c && c.preset; }).length; }, 0) } : null; },
+      duel: function () { var g = duel.game; return g ? { phase: g.phase, turn: g.turn, starter: g.starter, drawn: g.drawn, pool: g.pool.length, refills: g.refills || 0, batchStart: g.batchStart || 0, clocks: g.clocks, winner: g.winner, loser: g.loser, reason: g.reason, moves: g.moves, opponent: duel.opponent, variant: duel.variant, levelIdx: g.levelIdx, solved: g.solved, presets: board.reduce(function (n, row) { return n + row.filter(function (c) { return c && c.preset; }).length; }, 0) } : null; },
       duelMoves: function () { return duel.game && duel.game.legalMoves ? duel.game.legalMoves() : []; },
       puzzleSafeMove: function () { var s = findSolution([], puzzleMode()); return s.moves && s.moves.length ? s.moves[0] : null; },
       // A legal move that leaves the puzzle unsolvable (for testing 'broke'); null if none exists.
@@ -6725,6 +6886,9 @@
       back: handleBack,
       online: function () { return { active: online.active, side: online.side, code: online.code, pending: !!online.pendingMove }; },
       // Any legal placement from the rendered state (works on the guest too, which has no engine).
+      drag: function () { return drag ? { idx: drag.idx, premoveAt: drag.premoveAt } : null; },
+      aiMove: function (level) { return duel.game && duel.game.legalMoves ? DUEL.chooseMove(duel.game, level || 'hard') : null; },
+      allMoves: function () { var out = []; pieces.forEach(function (p, idx) { if (p.used) return; for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) if (fits(p.matrix, r, c)) { var cells = []; for (var rr = 0; rr < p.matrix.length; rr++) for (var cc = 0; cc < p.matrix[rr].length; cc++) if (p.matrix[rr][cc]) cells.push((r + rr) * N + c + cc); out.push({ idx: idx, top: r, left: c, cells: cells }); } }); return out; }, // works on the guest too (no engine there)
       anyLegal: function () {
         for (var i = 0; i < pieces.length; i++) { if (pieces[i].used) continue; var m = pieces[i].matrix;
           for (var t = 0; t + m.length <= N; t++) for (var l = 0; l + m[0].length <= N; l++) if (fits(m, t, l)) return { idx: i, top: t, left: l }; }
@@ -6769,7 +6933,7 @@
         });
         return out;
       },
-      solverMove: function () { var r = findSolution([]); return r.moves && r.moves.length ? r.moves[0] : null; },
+      solverMove: function () { var r = findSolution([], currentMode === 'duel' && duelIsPuzzle() ? puzzleMode() : undefined); return r.moves && r.moves.length ? r.moves[0] : null; },
       fx: function () { var f = document.getElementById('fxLayer'); return { shards: f.querySelectorAll('.fx-shard').length, ghosts: f.querySelectorAll('.fx-ghost').length, bands: f.querySelectorAll('.fx-band').length, words: Array.prototype.map.call(f.querySelectorAll('.fx-word'), function (w) { return w.textContent; }) }; },
       solutionsLabel: solutionsLabel,
       clockMs: function () { return duelClockMs(); },
@@ -7051,6 +7215,8 @@
       var ok = document.createElement('button'); ok.className = 'ctrl assist'; ok.textContent = already ? 'Already approved' : (res.ok ? 'Approve' : 'Approve anyway'); ok.disabled = already;
       ok.addEventListener('click', function () {
         var list = approvedLevels();
+        // Checked again at click time: the same code pasted twice renders two cards.
+        if (list.some(function (x) { return x.id === lvl.id || shapeKey(x) === shapeKey(lvl); })) { ok.disabled = true; ok.textContent = 'Already approved'; return; }
         list.push({ id: lvl.id, mode: lvl.mode, name: lvl.name, difficulty: res.difficulty || lvl.claimed.difficulty || 'Medium', solutions: res.solutions || lvl.claimed.solutions || 1, board: lvl.board, pieces: lvl.pieces, author: lvl.author, approved: new Date().toISOString() });
         BB.writeJSON('bb_community_levels', list);
         BB.levelsChanged(); renderApproved();

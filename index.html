@@ -687,9 +687,9 @@
       <div id="board"></div>
     </div>
 
+    <div class="status" id="status"></div>
     <div id="tray"></div>
 
-    <div class="status" id="status"></div>
 
     <div class="winActions" id="winActions">
       <button class="ctrl" id="anotherBtn">↻ Try another solution</button>
@@ -1241,24 +1241,30 @@
       pieces: ['bigL_r270', 'T', 'Z_r90']
     },
     {
+      // careless ~34% (Medium), verified minClears = 2.
+      id: 108, mode: 'survive', name: 'Vice', difficulty: 'Medium', solutions: 25536,
+      board: ['##...###', '.#....##', '#......#', '##.###.#', '###....#', '#.####.#', '#..####.', '##.#####'],
+      pieces: ['S', 'S_r90', 'pentT_r90', 'diag3_r90', 'L_r90', 'T_r180']
+    },
+
+    // ---- SURVIVE — BANK 3 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
+    {
       // Generated 2026-09-27 (generate.js). careless ~33% (Medium), minClears = 1, 7 solutions.
       id: 133, mode: 'survive', name: 'Narrows', difficulty: 'Medium', solutions: 7,
       board: ['#.###.##', '###.##.#', '##..####', '#..#####', '.#....##', '####.#..', '#.###...', '##.#..##'],
       pieces: ['dom_v', 'bigL', 'Z']
     },
-
-    // ---- SURVIVE — BANK 3 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
+    {
+      // careless ~33% (Medium), verified minClears = 2.
+      id: 107, mode: 'survive', name: 'Gridlock', difficulty: 'Medium', solutions: 6341,
+      board: ['####...#', '##......', '##....##', '##..####', '.#######', '#......#', '##.#...#', '##.#...#'],
+      pieces: ['pentT', 'J_r90', 'L', 'sq3', 'rect_h']
+    },
     {
       // careless ~32% (Medium), verified minClears = 1.
       id: 104, mode: 'survive', name: 'One Shot', difficulty: 'Medium', solutions: 28004,
       board: ['#####..#', '###.##.#', '##...#..', '###....#', '##.....#', '#...#.##', '#...#.##', '.#######'],
       pieces: ['pentT', 'L_r180', 'J_r90', 'quad_h', 'sq2', 'T_r180']
-    },
-    {
-      // careless ~34% (Medium), verified minClears = 2.
-      id: 108, mode: 'survive', name: 'Vice', difficulty: 'Medium', solutions: 25536,
-      board: ['##...###', '.#....##', '#......#', '##.###.#', '###....#', '#.####.#', '#..####.', '##.#####'],
-      pieces: ['S', 'S_r90', 'pentT_r90', 'diag3_r90', 'L_r90', 'T_r180']
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~32% (Medium), minClears = 1, 16382 solutions.
@@ -1273,16 +1279,16 @@
       pieces: ['bigL_r270', 'diag3_r90', 'T_r180', 'Lsmall', 'Lsmall', 'pent_v']
     },
     {
-      // careless ~33% (Medium), verified minClears = 2.
-      id: 107, mode: 'survive', name: 'Gridlock', difficulty: 'Medium', solutions: 6341,
-      board: ['####...#', '##......', '##....##', '##..####', '.#######', '#......#', '##.#...#', '##.#...#'],
-      pieces: ['pentT', 'J_r90', 'L', 'sq3', 'rect_h']
-    },
-    {
       // Generated 2026-09-27 (generate.js). careless ~31% (Medium), minClears = 1, 27 solutions.
       id: 125, mode: 'survive', name: 'Slipstream', difficulty: 'Medium', solutions: 27,
       board: ['.#...#.#', '.#.#....', '##.#..#.', '....#.#.', '##..##.#', '#.###.#.', '.#...#..', '#..#.#.#'],
       pieces: ['Lsmall', 'diag3', 'sq2', 'bigL', 'sq2']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~30% (Medium), minClears = 1, 3 solutions (2 ways up to the last piece).
+      id: 143, mode: 'survive', name: 'Hairpin', difficulty: 'Medium', solutions: 3,
+      board: ['#.#.#.##', '.#####..', '####.##.', '#....#..', '.#..#.#.', '#..#.###', '##.#.##.', '.#..#.##'],
+      pieces: ['L', 'T', 'corner']
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~29% (Medium), minClears = 1, 5 solutions.
@@ -1291,10 +1297,10 @@
       pieces: ['pentT', 'J_r270', 'Jsmall']
     },
     {
-      // Generated 2026-09-27 (generate.js). careless ~26% (Medium), minClears = 1, 182 solutions.
-      id: 128, mode: 'survive', name: 'Keystone', difficulty: 'Medium', solutions: 182,
-      board: ['.#.##.##', '##....##', '......#.', '.....###', '##.#....', '###.#.#.', '###.#.##', '#.##..#.'],
-      pieces: ['diag3_r90', 'Z_r90', 'sq2', 'bigL_r180']
+      // Generated generate3.js 2026-10-05. careless ~28% (Medium), minClears = 2, 6 solutions (2 ways up to the last piece).
+      id: 144, mode: 'survive', name: 'Sleight', difficulty: 'Medium', solutions: 6,
+      board: ['.#.#....', '..##...#', '###.##.#', '#.#.#.##', '..######', '#..#..#.', '#.##..#.', '...#.#.#'],
+      pieces: ['J_r90', 'bigL_r180', 'T_r90']
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~27% (Medium), minClears = 1, 4 solutions.
@@ -1302,19 +1308,87 @@
       board: ['###...##', '...##..#', '######.#', '..###..#', '.#.#.#..', '#.######', '.#######', '#######.'],
       pieces: ['pentT_r270', 'J_r180', 'diag3']
     },
+
+    // ---- SURVIVE — BANK 4 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
+    {
+      // Generated 2026-09-27 (generate.js). careless ~26% (Medium), minClears = 1, 182 solutions.
+      id: 128, mode: 'survive', name: 'Keystone', difficulty: 'Medium', solutions: 182,
+      board: ['.#.##.##', '##....##', '......#.', '.....###', '##.#....', '###.#.#.', '###.#.##', '#.##..#.'],
+      pieces: ['diag3_r90', 'Z_r90', 'sq2', 'bigL_r180']
+    },
     {
       // Generated 2026-09-27 (generate.js). careless ~25% (Medium), minClears = 2, 6 solutions.
       id: 127, mode: 'survive', name: 'Undertow', difficulty: 'Medium', solutions: 6,
       board: ['####.#.#', '##..##.#', '###....#', '.#.#####', '####.###', '##.#.###', '#.#####.', '.######.'],
       pieces: ['J_r90', 'pentT_r90', 'T_r270']
     },
+    {
+      // Generated generate3.js 2026-10-05. careless ~26% (Medium), minClears = 1, 1 solution (1 way up to the last piece).
+      id: 142, mode: 'survive', name: 'Trick Shot', difficulty: 'Medium', solutions: 1,
+      board: ['#....#.#', '.#####.#', '..#..###', '.....###', '.#...#..', '##.#..#.', '.#.#...#', '#...#...'],
+      pieces: ['pentT_r270', 'rect_v', 'J_r180']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~25% (Medium), minClears = 2, 7 solutions (1 way up to the last piece).
+      id: 141, mode: 'survive', name: 'Three Keys', difficulty: 'Medium', solutions: 7,
+      board: ['..####.#', '.#.###..', '.##.###.', '#.##.###', '##.#####', '.###...#', '..#.##.#', '.##....#'],
+      pieces: ['L_r180', 'sq2', 'S_r90']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~13% (Hard), minClears = 1, 2 solutions (1 way up to the last piece).
+      id: 150, mode: 'survive', name: 'Needle', difficulty: 'Hard', solutions: 2,
+      board: ['.#..#.#.', '....###.', '##..##..', '..##..#.', '##..##..', '.#.#.#.#', '#.#.#.#.', '.#.#.###'],
+      pieces: ['L_r180', 'J_r90', 'sq2']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~13% (Hard), minClears = 1, 1 solution (1 way up to the last piece).
+      id: 148, mode: 'survive', name: 'Tumbler', difficulty: 'Hard', solutions: 1,
+      board: ['...#..#.', '.#..###.', '.#.####.', '#..#.###', '#.#.####', '.#.##...', '#######.', '.####...'],
+      pieces: ['corner', 'sq2', 'L_r90']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~13% (Hard), minClears = 1, 2 solutions (2 ways up to the last piece).
+      id: 146, mode: 'survive', name: 'Lantern', difficulty: 'Hard', solutions: 2,
+      board: ['###.####', '.#.##..#', '#..#.##.', '...#....', '###..#.#', '###.#.#.', '..#.#..#', '#.....#.'],
+      pieces: ['rect_h', 'tri_h', 'pentT_r270']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~11% (Hard), minClears = 2, 4 solutions (2 ways up to the last piece).
+      id: 159, mode: 'survive', name: 'Latch', difficulty: 'Hard', solutions: 4,
+      board: ['#####.#.', '###.####', '#.##...#', '##.#.#.#', '#.######', '#..#####', '##.#.##.', '.....###'],
+      pieces: ['J_r180', 'bigL_r180', 'quad_h']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~9% (Hard), minClears = 2, 3 solutions (1 way up to the last piece).
+      id: 154, mode: 'survive', name: 'Loophole', difficulty: 'Hard', solutions: 3,
+      board: ['...###..', '##.##..#', '#.#.####', '#...#.##', '##...###', '..#.####', '##...##.', '#..#....'],
+      pieces: ['quad_v', 'pentT_r180', 'bigL_r90']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~8% (Hard), minClears = 1, 6 solutions (2 ways up to the last piece).
+      id: 153, mode: 'survive', name: 'Cantilever', difficulty: 'Hard', solutions: 6,
+      board: ['....####', '####.#.#', '###.####', '.##.####', '.#.#.#.#', '#.#..#.#', '###.....', '#.#.####'],
+      pieces: ['pentT', 'diag2', 'T_r270']
+    },
 
-    // ---- SURVIVE — BANK 4 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
+    // ---- SURVIVE — BANK 5 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
     {
       // careless ~7% (Hard), verified minClears = 0.
       id: 103, mode: 'survive', name: 'Dead Center', difficulty: 'Hard', solutions: 41,
       board: ['######.#', '##.#.###', '##...##.', '##..#.##', '##.....#', '.#......', '#.###...', '###.##..'],
       pieces: ['pentT_r180', 'J_r270', 'pentT_r270', 'tri_h', 'Z']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~7% (Hard), minClears = 1, 3 solutions (2 ways up to the last piece).
+      id: 160, mode: 'survive', name: 'Clean Sweep', difficulty: 'Hard', solutions: 3,
+      board: ['###.####', '##.###.#', '#.#..#.#', '#...####', '.#######', '.##....#', '#.#..###', '.#..###.'],
+      pieces: ['dom_v', 'pentT', 'tri_v']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~6% (Hard), minClears = 1, 2 solutions (1 way up to the last piece).
+      id: 149, mode: 'survive', name: 'Catch-22', difficulty: 'Hard', solutions: 2,
+      board: ['..#####.', '#..#.##.', '##..##..', '#.###.#.', '.##.#..#', '....#.#.', '#.....#.', '.#.#####'],
+      pieces: ['diag3_r90', 'S', 'bigL_r180']
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~4% (Hard), minClears = 1, 4 solutions.
@@ -1323,10 +1397,28 @@
       pieces: ['tri_v', 'pentT_r180', 'sq2', 'bigL', 'dom_h']
     },
     {
-      // careless ~3% (Hard), verified minClears = 0.
-      id: 102, mode: 'survive', name: 'Iron Grip', difficulty: 'Hard', solutions: 11,
-      board: ['.#...###', '#.....##', '##...#.#', '....#.##', '.....###', '#..##.#.', '..#.#.##', '##.##...'],
-      pieces: ['rect_h', 'J_r180', 'bigL_r180', 'S', 'quad_v', 'T_r270']
+      // Generated generate3.js 2026-10-05. careless ~5% (Hard), minClears = 1, 1 solution (1 way up to the last piece).
+      id: 156, mode: 'survive', name: 'Ricochet', difficulty: 'Hard', solutions: 1,
+      board: ['.#...##.', '#.#...##', '.#####..', '.#####.#', '.####.#.', '..#.#.#.', '.####...', '#..####.'],
+      pieces: ['J_r90', 'corner', 'pentT']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~4% (Hard), minClears = 1, 3 solutions (2 ways up to the last piece).
+      id: 152, mode: 'survive', name: 'Skeleton Key', difficulty: 'Hard', solutions: 3,
+      board: ['...#....', '...#####', '..#..##.', '..#..###', '##..#..#', '#.###.#.', '#..###.#', '##.#..##'],
+      pieces: ['bigL', 'diag3_r90', 'Lsmall_r180']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~4% (Hard), minClears = 1, 1 solution (1 way up to the last piece).
+      id: 155, mode: 'survive', name: 'Three Steps', difficulty: 'Hard', solutions: 1,
+      board: ['#.######', '##.##.##', '.#######', '####.#.#', '####.###', '#..#...#', '##..####', '.#..###.'],
+      pieces: ['dom_h', 'quad_h', 'rect_h']
+    },
+    {
+      // Generated 2026-09-27 (generate.js). careless ~3% (Hard), minClears = 2, 1 solution.
+      id: 135, mode: 'survive', name: 'Clockwork', difficulty: 'Hard', solutions: 1,
+      board: ['#..#.###', '..####..', '..###..#', '..####.#', '#..#####', '#.#..##.', '######.#', '.#####.#'],
+      pieces: ['pentT', 'quad_v', 'corner']
     },
     {
       // careless ~3% (Hard), verified minClears = 0, ONE solution — the
@@ -1336,11 +1428,13 @@
       pieces: ['pentT_r180', 'S_r90', 'Lsmall_r180', 'J_r90', 'T_r90', 'J_r270']
     },
     {
-      // Generated 2026-09-27 (generate.js). careless ~3% (Hard), minClears = 2, 1 solution.
-      id: 135, mode: 'survive', name: 'Clockwork', difficulty: 'Hard', solutions: 1,
-      board: ['#..#.###', '..####..', '..###..#', '..####.#', '#..#####', '#.#..##.', '######.#', '.#####.#'],
-      pieces: ['pentT', 'quad_v', 'corner']
+      // Generated generate3.js 2026-10-05. careless ~3% (Hard), minClears = 2, 4 solutions (1 way up to the last piece).
+      id: 147, mode: 'survive', name: 'Switchback', difficulty: 'Hard', solutions: 4,
+      board: ['.##...##', '.##.####', '#.#####.', '###.#..#', '.#..#..#', '#...##.#', '#.####.#', '.##.####'],
+      pieces: ['Lsmall', 'pentT_r270', 'S']
     },
+
+    // ---- SURVIVE — BANK 6 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
     {
       // Generated 2026-09-27 (generate.js). careless ~3% (Hard), minClears = 1, 35 solutions.
       id: 140, mode: 'survive', name: 'Ironclad', difficulty: 'Hard', solutions: 35,
@@ -1348,10 +1442,40 @@
       pieces: ['dom_v', 'J', 'L', 'sq2', 'Z_r90', 'bigL_r270']
     },
     {
+      // careless ~3% (Hard), verified minClears = 0.
+      id: 102, mode: 'survive', name: 'Iron Grip', difficulty: 'Hard', solutions: 11,
+      board: ['.#...###', '#.....##', '##...#.#', '....#.##', '.....###', '#..##.#.', '..#.#.##', '##.##...'],
+      pieces: ['rect_h', 'J_r180', 'bigL_r180', 'S', 'quad_v', 'T_r270']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~2% (Hard), minClears = 2, 1 solution (1 way up to the last piece).
+      id: 158, mode: 'survive', name: 'Tripwire', difficulty: 'Hard', solutions: 1,
+      board: ['###..##.', '#..#.###', '..#####.', '.#..###.', '.###.#.#', '##....#.', '...##..#', '##.#..##'],
+      pieces: ['Lsmall_r180', 'pentT', 'diag3']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~2% (Hard), minClears = 1, 1 solution (1 way up to the last piece).
+      id: 157, mode: 'survive', name: 'Sidestep', difficulty: 'Hard', solutions: 1,
+      board: ['####.###', '.#.##.##', '#.....#.', '..####..', '...####.', '...##.#.', '##..##..', '####.#..'],
+      pieces: ['pentT_r180', 'L', 'Z_r90']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~2% (Hard), minClears = 1, 3 solutions (2 ways up to the last piece).
+      id: 151, mode: 'survive', name: 'Fold', difficulty: 'Hard', solutions: 3,
+      board: ['##..##..', '.#####.#', '###.###.', '.###.###', '..#.####', '##.#.#.#', '#.#.####', '####....'],
+      pieces: ['dot', 'T', 'T_r90']
+    },
+    {
       // Generated 2026-09-27 (generate.js). careless ~1% (Hard), minClears = 1, 141 solutions.
       id: 137, mode: 'survive', name: 'Bottleneck', difficulty: 'Hard', solutions: 141,
       board: ['#..####.', '###.####', '##.#.#.#', '.####..#', '.#.##.#.', '#.##..#.', '##..####', '.#....#.'],
       pieces: ['Lsmall', 'pentT_r180', 'dot', 'T', 'dom_v']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~1% (Hard), minClears = 1, 2 solutions (1 way up to the last piece).
+      id: 145, mode: 'survive', name: 'Hinge Pin', difficulty: 'Hard', solutions: 2,
+      board: ['...##...', '####..#.', '#...###.', '.####..#', '#...##..', '###...##', '#####...', '#..#.###'],
+      pieces: ['dom_h', 'S_r90', 'Lsmall']
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~1% (Hard), minClears = 4, 104 solutions.
@@ -1386,6 +1510,12 @@
       pieces: ['J_r270', 'T', 'diag3_r90', 'Lsmall']
     },
     {
+      // Generated generate3.js 2026-10-05. careless ~36% (Medium), minClears = 1, 3 solutions (2 ways up to the last piece).
+      id: 249, mode: 'lose', name: 'Three Nails', difficulty: 'Medium', solutions: 3,
+      board: ['#.##.###', '##.##.##', '#.....##', '###.####', '###.##.#', '#.###...', '###.###.', '.#####.#'],
+      pieces: ['L_r90', 'J_r270', 'J_r180']
+    },
+    {
       // Generated 2026-09-27 (generate.js). careless ~35% (Medium), minClears = 1, 36 solutions.
       id: 244, mode: 'lose', name: 'Blind Alley', difficulty: 'Medium', solutions: 36,
       board: ['#.##.#.#', '###....#', '####...#', '#######.', '#.###.##', '.#.#.#..', '##.##.##', '#.######'],
@@ -1404,10 +1534,22 @@
       pieces: ['corner', 'T_r90', 'diag2']
     },
     {
-      // Generated 2026-09-27 (generate.js). careless ~27% (Medium), minClears = 2, 34 solutions.
-      id: 245, mode: 'lose', name: 'Padlock', difficulty: 'Medium', solutions: 34,
-      board: ['##...###', '##....#.', '##...###', '##..####', '..######', '######.#', '.######.', '####..##'],
-      pieces: ['Lsmall_r180', 'diag3_r90', 'Lsmall', 'bigL']
+      // Generated generate3.js 2026-10-05. careless ~30% (Medium), minClears = 0, 2 solutions (2 ways up to the last piece).
+      id: 250, mode: 'lose', name: 'Cornered', difficulty: 'Medium', solutions: 2,
+      board: ['.#.##..#', '.#######', '###.####', '###..#.#', '###..###', '...#.##.', '##..##..', '#.#.####'],
+      pieces: ['Lsmall', 'corner', 'L_r180']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~28% (Medium), minClears = 2, 2 solutions (1 way up to the last piece).
+      id: 251, mode: 'lose', name: 'Mousetrap', difficulty: 'Medium', solutions: 2,
+      board: ['###...##', '####.###', '######.#', '.#.#.###', '#.##.###', '###..#..', '###..#.#', '##.##.##'],
+      pieces: ['T', 'quad_v', 'tri_v']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~28% (Medium), minClears = 1, 5 solutions (2 ways up to the last piece).
+      id: 252, mode: 'lose', name: 'Shut Door', difficulty: 'Medium', solutions: 5,
+      board: ['##.#####', '##.####.', '##.##.##', '.####..#', '....###.', '.#.##.##', '##.####.', '.#.#.#.#'],
+      pieces: ['L_r90', 'Lsmall_r180', 'diag3_r90']
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~27% (Medium), minClears = 2, 10 solutions.
@@ -1415,11 +1557,25 @@
       board: ['#.######', '##..#.##', '.##..##.', '....#.##', '.#####.#', '#..#####', '..######', '#..#.###'],
       pieces: ['diag3_r90', 'Lsmall_r180', 'bigL_r90', 'L']
     },
+
+    // ---- LOSE — BANK 2 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
     {
       // Generated 2026-09-27 (generate.js). careless ~35% (Medium), minClears = 1, 17 solutions.
       id: 223, mode: 'lose', name: 'Tar Pit', difficulty: 'Medium', solutions: 14,
       board: ['.#####.#', '##.####.', '#.##..##', '....####', '#.###..#', '####...#', '#####..#', '##.#.###'],
       pieces: ['tri_h', 'diag2_r90', 'S']
+    },
+    {
+      // Generated 2026-09-27 (generate.js). careless ~35% (Medium), minClears = 2, 4 solutions.
+      id: 230, mode: 'lose', name: 'Cold Case', difficulty: 'Medium', solutions: 2,
+      board: ['#.###.#.', '#.####.#', '#######.', '.#######', '#.####..', '##.###.#', '###.##.#', '##...###'],
+      pieces: ['Jsmall', 'dom_h', 'corner']
+    },
+    {
+      // Generated 2026-09-27 (generate.js). careless ~27% (Medium), minClears = 2, 34 solutions.
+      id: 245, mode: 'lose', name: 'Padlock', difficulty: 'Medium', solutions: 34,
+      board: ['##...###', '##....#.', '##...###', '##..####', '..######', '######.#', '.######.', '####..##'],
+      pieces: ['Lsmall_r180', 'diag3_r90', 'Lsmall', 'bigL']
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~74% (Easy), minClears = 2, 3 solutions.
@@ -1428,18 +1584,16 @@
       pieces: ['diag3_r90', 'tri_v', 'T_r180']
     },
     {
-      // Generated 2026-09-27 (generate.js). careless ~35% (Medium), minClears = 2, 4 solutions.
-      id: 230, mode: 'lose', name: 'Cold Case', difficulty: 'Medium', solutions: 2,
-      board: ['#.###.#.', '#.####.#', '#######.', '.#######', '#.####..', '##.###.#', '###.##.#', '##...###'],
-      pieces: ['Jsmall', 'dom_h', 'corner']
-    },
-
-    // ---- LOSE — BANK 2 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
-    {
       // Generated 2026-09-27 (generate.js). careless ~32% (Medium), minClears = 1, 4 solutions.
       id: 225, mode: 'lose', name: 'Lockjaw', difficulty: 'Medium', solutions: 2,
       board: ['#.##...#', '.##..###', '##.#####', '###.##.#', '#..##...', '##.##..#', '##..####', '##.####.'],
       pieces: ['Jsmall', 'L_r180', 'Z_r90']
+    },
+    {
+      // Generated 2026-09-27 (generate.js). careless ~31% (Medium), minClears = 1, 28 solutions.
+      id: 219, mode: 'lose', name: 'Stalemate', difficulty: 'Medium', solutions: 28,
+      board: ['.###.###', '###.#.#.', '####...#', '.##.##.#', '##..##.#', '#..####.', '.#.#####', '######.#'],
+      pieces: ['diag2', 'J_r270', 'dom_v']
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~49% (Easy), minClears = 2, 16 solutions.
@@ -1448,23 +1602,25 @@
       pieces: ['quad_h', 'J_r180', 'L_r180', 'diag3']
     },
     {
-      // Generated 2026-09-27 (generate.js). careless ~32% (Medium), minClears = 0, 11 solutions.
-      id: 222, mode: 'lose', name: 'Choke Point', difficulty: 'Medium', solutions: 9,
-      board: ['##.#####', '#.#.##.#', '#.#..###', '.#.#####', '#..#....', '###..###', '.###..##', '#####.##'],
-      pieces: ['dom_v', 'tri_v', 'dom_v']
-    },
-    {
       // Generated 2026-09-27 (generate.js). careless ~32% (Medium), minClears = 2, 284 solutions.
       id: 224, mode: 'lose', name: 'Roadblock', difficulty: 'Medium', solutions: 279,
       board: ['##.####.', '#######.', '#.####..', '..######', '#...#.##', '#.###..#', '##.####.', '###...##'],
       pieces: ['dot', 'Z', 'dom_h', 'Z']
     },
     {
-      // Generated 2026-09-27 (generate.js). careless ~31% (Medium), minClears = 1, 28 solutions.
-      id: 219, mode: 'lose', name: 'Stalemate', difficulty: 'Medium', solutions: 28,
-      board: ['.###.###', '###.#.#.', '####...#', '.##.##.#', '##..##.#', '#..####.', '.#.#####', '######.#'],
-      pieces: ['diag2', 'J_r270', 'dom_v']
+      // Generated 2026-09-27 (generate.js). careless ~32% (Medium), minClears = 1, 41 solutions.
+      id: 226, mode: 'lose', name: 'Tourniquet', difficulty: 'Hard', solutions: 40,
+      board: ['####.##.', '###..###', '###..###', '.#.####.', '##.####.', '##...#.#', '##.#####', '#.###.##'],
+      pieces: ['dom_h', 'bigL_r180', 'dot']
     },
+    {
+      // Generated 2026-09-27 (generate.js). careless ~32% (Medium), minClears = 0, 11 solutions.
+      id: 222, mode: 'lose', name: 'Choke Point', difficulty: 'Medium', solutions: 9,
+      board: ['##.#####', '#.#.##.#', '#.#..###', '.#.#####', '#..#....', '###..###', '.###..##', '#####.##'],
+      pieces: ['dom_v', 'tri_v', 'dom_v']
+    },
+
+    // ---- LOSE — BANK 3 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
     {
       // Generated 2026-09-27 (generate.js). careless ~28% (Medium), minClears = 1, 8 solutions.
       id: 227, mode: 'lose', name: 'Standstill', difficulty: 'Hard', solutions: 14,
@@ -1484,19 +1640,55 @@
       pieces: ['T', 'diag3', 'bigL_r90']
     },
     {
-      // Generated 2026-09-27 (generate.js). careless ~32% (Medium), minClears = 1, 41 solutions.
-      id: 226, mode: 'lose', name: 'Tourniquet', difficulty: 'Hard', solutions: 40,
-      board: ['####.##.', '###..###', '###..###', '.#.####.', '##.####.', '##...#.#', '##.#####', '#.###.##'],
-      pieces: ['dom_h', 'bigL_r180', 'dot']
-    },
-    {
       // Generated 2026-09-27 (generate.js). careless ~81% (Easy), minClears = 1, 39 solutions.
       id: 213, mode: 'lose', name: 'Sinkhole', difficulty: 'Hard', solutions: 31,
       board: ['.#.####.', '######.#', '#.###...', '###.#..#', '#..#####', '.#####..', '#.####.#', '#..#.###'],
       pieces: ['dom_h', 'tri_h', 'tri_h', 'diag2']
     },
+    {
+      // Generated generate3.js 2026-10-05. careless ~15% (Hard), minClears = 1, 4 solutions (2 ways up to the last piece).
+      id: 267, mode: 'lose', name: 'Checkmate', difficulty: 'Hard', solutions: 4,
+      board: ['.##.##..', '...#.#.#', '#.######', '..#####.', '######.#', '#.#.#.##', '####.###', '######..'],
+      pieces: ['J_r90', 'Jsmall', 'T']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~13% (Hard), minClears = 1, 3 solutions (2 ways up to the last piece).
+      id: 264, mode: 'lose', name: 'Clamp', difficulty: 'Hard', solutions: 3,
+      board: ['####.###', '#######.', '.##.....', '##.#.#..', '.###.#..', '#.######', '##.####.', '##..###.'],
+      pieces: ['tri_h', 'L_r270', 'L_r90']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~12% (Hard), minClears = 1, 7 solutions (1 way up to the last piece).
+      id: 258, mode: 'lose', name: 'Jam Jar', difficulty: 'Hard', solutions: 7,
+      board: ['#####.##', '####.###', '#.######', '##..####', '#..#####', '.####...', '.#.##..#', '.#####.#'],
+      pieces: ['S', 'tri_v', 'pentT']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~11% (Hard), minClears = 1, 1 solution (1 way up to the last piece).
+      id: 261, mode: 'lose', name: 'Tight Spot', difficulty: 'Hard', solutions: 1,
+      board: ['..##.#..', '####.###', '##.#####', '##..###.', '...#.#.#', '#.#...##', '####.###', '#####..#'],
+      pieces: ['T', 'Lsmall_r180', 'bigL_r90']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~10% (Hard), minClears = 1, 2 solutions (1 way up to the last piece).
+      id: 262, mode: 'lose', name: 'Last Nail', difficulty: 'Hard', solutions: 2,
+      board: ['.####.##', '######..', '.####.#.', '#.##.###', '#####.#.', '####...#', '#.##.###', '#...###.'],
+      pieces: ['Jsmall', 'L_r90', 'tri_h']
+    },
+    {
+      // Generated 2026-09-27 (generate.js). careless ~10% (Hard), minClears = 2, 7 solutions.
+      id: 235, mode: 'lose', name: 'Ratchet Down', difficulty: 'Hard', solutions: 7,
+      board: ['.####.##', '#.#..###', '######.#', '##...###', '##.#####', '#..#####', '##..###.', '##.#.###'],
+      pieces: ['tri_h', 'bigL_r270', 'J']
+    },
 
-    // ---- LOSE — BANK 3 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
+    // ---- LOSE — BANK 4 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
+    {
+      // Generated generate3.js 2026-10-05. careless ~9% (Hard), minClears = 0, 2 solutions (1 way up to the last piece).
+      id: 255, mode: 'lose', name: 'Keyhole', difficulty: 'Hard', solutions: 2,
+      board: ['.######.', '.#####.#', '#####.##', '###.##.#', '.#.#.#..', '###..##.', '##.#..##', '#.####.#'],
+      pieces: ['L', 'diag3', 'dom_h']
+    },
     {
       // Generated 2026-09-27 (generate.js). careless ~10% (Hard), minClears = 1, 2 solutions.
       id: 247, mode: 'lose', name: 'Under Lock', difficulty: 'Hard', solutions: 2,
@@ -1504,10 +1696,16 @@
       pieces: ['diag2', 'Jsmall', 'S_r90']
     },
     {
-      // Generated 2026-09-27 (generate.js). careless ~10% (Hard), minClears = 2, 7 solutions.
-      id: 235, mode: 'lose', name: 'Ratchet Down', difficulty: 'Hard', solutions: 7,
-      board: ['.####.##', '#.#..###', '######.#', '##...###', '##.#####', '#..#####', '##..###.', '##.#.###'],
-      pieces: ['tri_h', 'bigL_r270', 'J']
+      // Generated generate3.js 2026-10-05. careless ~9% (Hard), minClears = 1, 2 solutions (2 ways up to the last piece).
+      id: 253, mode: 'lose', name: 'Dead Weight', difficulty: 'Hard', solutions: 2,
+      board: ['####...#', '#.##.#..', '.###.#..', '###.#.##', '######..', '.#######', '#.#.####', '##.#####'],
+      pieces: ['tri_v', 'T_r270', 'dom_h']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~9% (Hard), minClears = 0, 2 solutions (2 ways up to the last piece).
+      id: 260, mode: 'lose', name: 'Short Fuse', difficulty: 'Hard', solutions: 2,
+      board: ['#.#.#.##', '.###..#.', '####.##.', '....###.', '#..###.#', '##.##.##', '.#.#####', '#.######'],
+      pieces: ['Z_r90', 'L_r90', 'dom_v']
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~13% (Hard), minClears = 0, 35 solutions.
@@ -1516,16 +1714,42 @@
       pieces: ['dot', 'dom_v', 'tri_h']
     },
     {
+      // Generated generate3.js 2026-10-05. careless ~7% (Hard), minClears = 1, 2 solutions (2 ways up to the last piece).
+      id: 254, mode: 'lose', name: 'Boxed In', difficulty: 'Hard', solutions: 2,
+      board: ['#####...', '.####.##', '#.###.##', '######.#', '.#######', '#...####', '#####..#', '####.#..'],
+      pieces: ['bigL_r270', 'dom_v', 'tri_h']
+    },
+    {
       // Generated 2026-09-27 (generate.js). careless ~11% (Hard), minClears = 1, 5 solutions.
       id: 236, mode: 'lose', name: 'Closed Circuit', difficulty: 'Hard', solutions: 4,
       board: ['##.##.##', '#...####', '####.###', '####..#.', '##.##.##', '...###.#', '##.#.###', '.#####.#'],
       pieces: ['S_r90', 'dom_v', 'tri_h']
     },
     {
+      // Generated generate3.js 2026-10-05. careless ~5% (Hard), minClears = 2, 1 solution (1 way up to the last piece).
+      id: 257, mode: 'lose', name: 'Stopgap', difficulty: 'Hard', solutions: 1,
+      board: ['.######.', '###...##', '.#######', '##..####', '#..#####', '##.##.##', '##.#####', '##...#.#'],
+      pieces: ['L_r180', 'Lsmall_r180', 'J_r180']
+    },
+    {
       // Generated 2026-09-27 (generate.js). careless ~4% (Hard), minClears = 1, 10 solutions.
       id: 246, mode: 'lose', name: 'Rigor', difficulty: 'Hard', solutions: 10,
       board: ['#.##.##.', '##.####.', '.#.####.', '#.####.#', '####..#.', '#...####', '.######.', '#.##.###'],
       pieces: ['diag3', 'dom_h', 'dom_h', 'dom_v']
+    },
+    {
+      // Generated generate3.js 2026-10-05. careless ~4% (Hard), minClears = 1, 1 solution (1 way up to the last piece).
+      id: 268, mode: 'lose', name: 'Sealed Lips', difficulty: 'Hard', solutions: 1,
+      board: ['#####.##', '##.####.', '##.###..', '####.##.', '..##.##.', '###.###.', '##..####', '.###.###'],
+      pieces: ['diag3', 'L_r180', 'dom_h']
+    },
+
+    // ---- LOSE — BANK 5 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
+    {
+      // Generated generate3.js 2026-10-05. careless ~4% (Hard), minClears = 0, 3 solutions (2 ways up to the last piece).
+      id: 259, mode: 'lose', name: 'Lockstep', difficulty: 'Hard', solutions: 3,
+      board: ['####.#.#', '#.##.###', '##.#####', '#..##.##', '##..#.##', '.#.##.#.', '###.#.##', '...###.#'],
+      pieces: ['dom_h', 'quad_v', 'dom_v']
     },
     {
       // Generated 2026-09-27 (generate.js). careless ~4% (Hard), minClears = 1, 8 solutions.
@@ -1540,6 +1764,12 @@
       pieces: ['pentT_r270', 'J', 'dot']
     },
     {
+      // Generated generate3.js 2026-10-05. careless ~3% (Hard), minClears = 1, 1 solution (1 way up to the last piece).
+      id: 256, mode: 'lose', name: 'Snare', difficulty: 'Hard', solutions: 1,
+      board: ['##.##..#', '#####.##', '#.#.####', '###.####', '###.#.##', '.#.#.#.#', '##...#.#', '###..##.'],
+      pieces: ['J_r270', 'tri_h', 'tri_v']
+    },
+    {
       // Generated 2026-09-27 (generate.js). careless ~7% (Hard), minClears = 2, 22 solutions.
       id: 237, mode: 'lose', name: 'Deadfall', difficulty: 'Hard', solutions: 21,
       board: ['.#.#.###', '#.####..', '##...###', '###..###', '#####...', '##.#.#.#', '.###.###', '.#####.#'],
@@ -1551,23 +1781,30 @@
       board: CHAMBER, pieces: ['T', 'tri_v', 'diag2']
     },
     {
-      // Generated 2026-09-27 (generate.js). careless ~6% (Hard), minClears = 1, 41 solutions.
-      id: 234, mode: 'lose', name: 'Impasse', difficulty: 'Hard', solutions: 28,
-      board: ['.#######', '##.#.###', '#..#####', '#######.', '###.##.#', '.#######', '.####..#', '..#..###'],
-      pieces: ['Jsmall', 'dom_h', 'dot', 'dom_v']
+      // Generated generate3.js 2026-10-05. careless ~2% (Hard), minClears = 1, 2 solutions (2 ways up to the last piece).
+      id: 263, mode: 'lose', name: 'Bind', difficulty: 'Hard', solutions: 2,
+      board: ['.#.###.#', '.#######', '#.#.#.##', '#####.##', '####.###', '###.#.##', '##.##...', '###.##..'],
+      pieces: ['dot', 'J_r270', 'diag3']
     },
-
-    // ---- LOSE — BANK 4 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
+    {
+      // Generated generate3.js 2026-10-05. careless ~2% (Hard), minClears = 1, 1 solution (1 way up to the last piece).
+      id: 265, mode: 'lose', name: 'Wedge', difficulty: 'Hard', solutions: 1,
+      board: ['###.#.#.', '###....#', '#.#####.', '##..##.#', '###.####', '.##.####', '####...#', '###.###.'],
+      pieces: ['quad_h', 'dom_h', 'L_r180']
+    },
     {
       // naiveJamRate ~1% (Hard) on CHAMBER — 4 pieces.
       id: 204, mode: 'lose', name: 'Sealed', difficulty: 'Hard', solutions: 87,
       board: CHAMBER, pieces: ['tri_v', 'corner', 'L', 'dom_v']
     },
     {
-      // naiveJamRate <1% (Hard) on CHAMBER.
-      id: 205, mode: 'lose', name: 'Airtight', difficulty: 'Hard', solutions: 4,
-      board: CHAMBER, pieces: ['quad_h', 'dom_h', 'Lsmall']
+      // Generated 2026-09-27 (generate.js). careless ~6% (Hard), minClears = 1, 41 solutions.
+      id: 234, mode: 'lose', name: 'Impasse', difficulty: 'Hard', solutions: 28,
+      board: ['.#######', '##.#.###', '#..#####', '#######.', '###.##.#', '.#######', '.####..#', '..#..###'],
+      pieces: ['Jsmall', 'dom_h', 'dot', 'dom_v']
     },
+
+    // ---- LOSE — BANK 6 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
     {
       // naiveJamRate ~1% (Hard) on CHAMBER.
       id: 203, mode: 'lose', name: 'Chamber Lock', difficulty: 'Hard', solutions: 2,
@@ -1580,9 +1817,9 @@
       board: CHAMBER, pieces: ['tri_v', 'L', 'corner']
     },
     {
-      // naiveJamRate <1% (Hard) on CHAMBER — 4 pieces.
-      id: 206, mode: 'lose', name: 'No Exit', difficulty: 'Hard', solutions: 21,
-      board: CHAMBER, pieces: ['Jsmall', 'tri_v', 'dom_h', 'sq2']
+      // naiveJamRate <1% (Hard) on CHAMBER.
+      id: 205, mode: 'lose', name: 'Airtight', difficulty: 'Hard', solutions: 4,
+      board: CHAMBER, pieces: ['quad_h', 'dom_h', 'Lsmall']
     },
     {
       // Rewritten 2026-08-23 — the original shipped with Jsmall, unplaceable
@@ -1603,10 +1840,21 @@
       board: ANTI, pieces: ['diag2', 'diag2', 'diag2', 'diag3']
     },
     {
+      // Generated generate3.js 2026-10-05. careless ~0% (Hard), minClears = 1, 1 solution (1 way up to the last piece).
+      id: 266, mode: 'lose', name: 'Stalled', difficulty: 'Hard', solutions: 1,
+      board: ['.######.', '.#######', '.#.##...', '.##.####', '##.###.#', '#...####', '##.#.#..', '.##.###.'],
+      pieces: ['T', 'tri_h', 'dot']
+    },
+    {
       // Generated 2026-09-27 (generate.js). careless ~10% (Hard), minClears = 1, 6 solutions.
       id: 233, mode: 'lose', name: 'Hard Stop', difficulty: 'Hard', solutions: 3,
       board: ['.####..#', '#.#.##.#', '.....#.#', '####.#..', '#.##.###', '######..', '######.#', '#.######'],
       pieces: ['corner', 'quad_v', 'dom_v', 'T_r180']
+    },
+    {
+      // naiveJamRate <1% (Hard) on CHAMBER — 4 pieces.
+      id: 206, mode: 'lose', name: 'No Exit', difficulty: 'Hard', solutions: 21,
+      board: CHAMBER, pieces: ['Jsmall', 'tri_v', 'dom_h', 'sq2']
     },
     {
       // Rewritten 2026-08-23 — the original shipped with Lsmall, which can
@@ -1624,7 +1872,7 @@
       id: 210, mode: 'lose', name: 'Last Stand', difficulty: 'Hard', solutions: 4,
       board: THICK, pieces: ['dom_h', 'dom_v', 'Lsmall_r180', 'S_r90']
     }
-  ];;;;
+  ];;;;;
 
   var api = { SHAPES: SHAPES, LEVELS: LEVELS, COLORS: COLORS, parseBoard: parseBoard };
 
@@ -2259,13 +2507,14 @@
     // Fischer-style increment: the mover gets this back after every move.
     // Stacks with the refill bonus (a move can earn both at once).
     incrementMs: 0,
-    // Refills: on a CROWDED board they're dealt small — mostly 1–3 blocks,
-    // a few 4s, never 5+ (a pentomino at that point is an instant loss for
-    // whoever faces it). On a ROOMY board (at least `bigRefillMinEmpty`
-    // empty cells) they come from the full library, big or small, so the
-    // game doesn't turn into an endless trickle of dominoes.
-    refillMaxCells: 4,
-    bigRefillMinEmpty: 32,
+    // Refill sizes follow the room on the board (decided 2026-10-05): the
+    // biggest piece a refill may hold has 1 + floor(empty / 12) cells —
+    // 12 empty cells allow dominoes, 24 triominoes, 36 tetrominoes, 48+ the
+    // pentominoes — and pieces of 1–3 / 4 / 5 cells are weighted 6 : 2 : 1.
+    // No cliff: the old rule switched to the full library at 32 empties,
+    // which the AI could steer a game over by clearing a line. Measured:
+    // human-level games went from 12 to 15 moves, lottery deaths stayed 0%.
+    refillCellsPerStep: 12,
     // Duel B: the board starts with this many random preset cells (grey,
     // nobody's; they still count for line clears). 0 = empty board.
     presetCells: 0
@@ -2332,11 +2581,19 @@
     var shapes = opts.shapes;
     var keys = opts.keys || Object.keys(shapes);
     var dealOne = makeDealer(shapes, keys, rng, opts.weight || defaultWeight);
-    var refillWeight = opts.refillWeight || function (m) {
-      var n = cellCount(m);
-      return n <= 3 ? 6 : n <= cfg.refillMaxCells ? 1 : 0;
-    };
-    var dealRefill = makeDealer(shapes, keys, rng, refillWeight);
+    function refillCap(empty) { return 1 + Math.floor(empty / cfg.refillCellsPerStep); }
+    function refillWeightFor(cap) { return function (m) { var n = cellCount(m); return n > cap ? 0 : n <= 3 ? 6 : n === 4 ? 2 : 1; }; }
+    // One dealer per cap, per random stream (the game's own, or an AI's private one).
+    function refillDealers(rng2) {
+      var cache = {};
+      return function (empty) {
+        var cap = refillCap(empty);
+        if (opts.refillPolicy) return makeDealer(shapes, keys, rng2, function (m) { return opts.refillPolicy(m, empty); });
+        if (!cache[cap]) cache[cap] = makeDealer(shapes, keys, rng2, refillWeightFor(cap));
+        return cache[cap];
+      };
+    }
+    var dealRefillFor = refillDealers(rng);
 
     var g = {
       cfg: cfg,
@@ -2378,15 +2635,15 @@
     }
     function emptyCells(grid) { var n = 0; for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) if (!grid[r][c]) n++; return n; }
     // Which dealer a refill uses depends on how much room the board has.
-    function refillDealerFor(grid) { return emptyCells(grid) >= cfg.bigRefillMinEmpty ? dealOne : dealRefill; }
+    function refillDealerFor(grid) { return dealRefillFor(emptyCells(grid)); }
     g.shapes = shapes;
     g.keys = keys;
     g.dealOne = dealOne;
-    g.dealRefill = dealRefill;
+    g.refillCap = refillCap;
     g.refillDealerFor = refillDealerFor;
-    g.refillDealerForEmpty = function (n) { return n >= cfg.bigRefillMinEmpty ? dealOne : dealRefill; };
+    g.refillDealerForEmpty = dealRefillFor;
     // Dealers on a private random stream, so an AI sampling refills doesn't move the game's own dice.
-    g.samplingDealers = function (rng2) { var one = makeDealer(shapes, keys, rng2, opts.weight || defaultWeight), small = makeDealer(shapes, keys, rng2, refillWeight); return function (empty) { return empty >= cfg.bigRefillMinEmpty ? one : small; }; };
+    g.samplingDealers = function (rng2) { return refillDealers(rng2); };
     g.emptyCells = function () { return emptyCells(g.grid); };
 
     function other(p) { return p === 'A' ? 'B' : 'A'; }
@@ -2453,11 +2710,12 @@
       if (cfg.incrementMs > 0) g.clocks[g.turn] += cfg.incrementMs;
       // Pool exhausted with nobody stuck → deal more; first time also +10 s.
       if (g.pool.every(function (q) { return q.used; })) {
-        var dealer = refillDealerFor(g.grid);
-        deal(cfg.refillSize, dealer);
+        var emptyNow = emptyCells(g.grid);
+        deal(cfg.refillSize, dealRefillFor(emptyNow));
         g.refills++;
         result.refilled = true;
-        result.bigRefill = dealer === dealOne;
+        result.refillCap = refillCap(emptyNow);
+        result.bigRefill = refillCap(emptyNow) >= 5;
         if (!g.bonusGiven) { g.clocks.A += cfg.bonusMs; g.clocks.B += cfg.bonusMs; g.bonusGiven = true; result.bonus = true; }
       }
       // Hand over the turn; if the next player has nothing that fits, they lose.
@@ -2523,7 +2781,7 @@
     var moves = legalMoves(grid, pool);
     if (!moves.length) return null;
     if (level === 'easy') return pickRandom(moves, rng);
-    if (level === 'hard') return deepMove(game, rng, opts && opts.budgetMs); // bitboards; never touches the game's own dice
+    if (level === 'hard') return deepMove(game, rng, opts && opts.budgetMs, opts); // bitboards; never touches the game's own dice
 
     var scored = moves.map(function (mv) {
       var g2 = applied(grid, pool[mv.idx].matrix, mv.top, mv.left);
@@ -2610,7 +2868,7 @@
     for (var i = 0; i < lists.length; i++) { if (used & (1 << i)) continue; var ms = lists[i]; for (var j = 0; j < ms.length; j++) if (((lo & ms[j].lo) | (hi & ms[j].hi)) === 0) n++; }
     return n;
   }
-  function deepMove(game, rng, budgetMs) {
+  function deepMove(game, rng, budgetMs, opts) {
     rng = rng || Math.random; budgetMs = budgetMs || 150;
     var live = [];
     game.pool.forEach(function (p, idx) { if (!p.used) live.push({ idx: idx, masks: masksFor(p.matrix) }); });
@@ -2618,7 +2876,7 @@
     var lists = live.map(function (l) { return l.masks; });
     var all = (1 << lists.length) - 1;
     var b0 = gridBits(game.grid);
-    var SAMPLES = 6, SAMPLE_DEPTH = 2, WIDTH = 32, tt = {}, refillMemo = {}, deadline = Date.now() + budgetMs, nodes = 0, aborted = false;
+    var SAMPLES = (opts && opts.samples) || 6, SAMPLE_DEPTH = (opts && opts.sampleDepth) || 2, WIDTH = (opts && opts.width) || 32, tt = {}, refillMemo = {}, deadline = Date.now() + budgetMs, nodes = 0, aborted = false;
     var seed = Math.floor(rng() * 4294967296) >>> 0;
     var srng = function () { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
     var dealerFor = game.samplingDealers(srng);
@@ -5016,7 +5274,7 @@
     var left = pieces.filter(function (p) { return !p.used; }).length;
     var curLvl = modeLevels[modeIndex];
     if (curLvl && curLvl.intro) {
-      tutorialTextEl.textContent = 'Drag the bar into the slot. Full lines clear away — that\'s the whole game.';
+      tutorialTextEl.textContent = 'Every board has an answer. Drag the bar into the slot — full lines clear away.';
     } else if (tutorialMode === 'lose') {
       tutorialTextEl.textContent = left === pieces.length
         ? 'Lose is the opposite game: you win when no remaining piece fits anywhere. Drag the glowing piece onto the glowing cells.'
@@ -5593,7 +5851,7 @@
       big: scoreEnabled && lastStageResult ? String(lastStageResult.finalScore) : formatTime(elapsed),
       delta: scoreEnabled && lastStageResult && lastStageResult.isNewBest ? '▲ new best' : (perfect ? '' : ''),
       line: (lvl.solutions === 1 ? 'The only solution' : 'Solution <b>' + found + ' of ' + solutionsLabel(lvl.solutions) + '</b>') + ' · ' + (resetCount ? resetCount + (resetCount === 1 ? ' reset' : ' resets') : 'no resets') + ' · ' + (hintsUsed ? hintsUsed + (hintsUsed === 1 ? ' hint' : ' hints') : 'no hints') + (rewindsUsed ? ' · ' + rewindsUsed + (rewindsUsed === 1 ? ' rewind' : ' rewinds') : '') + (perfect ? ' <span class="badge-perfect">Perfect</span>' : ''),
-      fair: lvl.intro ? 'Every level has a solution. Some have one, some have many.' : lvl.daily ? 'Today\'s board — the same for everyone · rated ' + lvl.difficulty : '',
+      fair: lvl.intro ? 'Every board has an answer — some have one, some have many.' : lvl.daily ? 'Today\'s board — the same for everyone · rated ' + lvl.difficulty : '',
       bar: lvl.daily || lvl.draft || lvl.intro ? null : bankProgress(currentMode, modeLevels, modeIndex),
       sub: '',
       actions: acts
@@ -5905,6 +6163,28 @@
   function boardOrigin() { var r = boardEl.getBoundingClientRect(); return { x: r.left + boardEl.clientLeft + cellEls[0].offsetLeft, y: r.top + boardEl.clientTop + cellEls[0].offsetTop }; }
   function gapSize() { return parseFloat(getComputedStyle(boardEl).gap) || 4; }
 
+  // A press on the pool's empty space picks the nearest piece: every piece's
+  // grab zone extends into the gap around it — above and below in a single
+  // row, up to the midpoint between rows, halfway to a neighbour sideways,
+  // and over a used piece's empty slot — never past the pool box. People
+  // press "where the block is", not on the block.
+  var TRAY_REACH_CELLS = 2.2;
+  trayEl.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('.tray-piece')) return; // the piece's own handler has it
+    if (locked || animating || drag) return;
+    if (currentMode === 'duel' && !isMyTurnNow() && !premoveAllowed()) return;
+    var x = e.clientX, y = e.clientY, best = null, bestD = Infinity;
+    Array.prototype.forEach.call(trayEl.querySelectorAll('.tray-piece:not(.used)'), function (el) {
+      var r = el.getBoundingClientRect();
+      var dx = Math.max(r.left - x, 0, x - r.right), dy = Math.max(r.top - y, 0, y - r.bottom);
+      var d = Math.hypot(dx, dy);
+      if (d < bestD) { bestD = d; best = el; }
+    });
+    var cell = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tray-cell')) || cellSize();
+    if (!best || bestD > cell * TRAY_REACH_CELLS) return;
+    e.preventDefault();
+    beginPointer(parseInt(best.getAttribute('data-piece-idx'), 10), e, best);
+  });
   function attachDrag(el, idx) {
     el.setAttribute('data-piece-idx', String(idx));
     el.addEventListener('pointerdown', function (e) {
@@ -5969,11 +6249,11 @@
   // On touch the piece rides a little above the finger, so the finger
   // never hides the cells it's about to land on. The drop target uses the
   // same lift, so what you see is where it goes. Mouse: no lift.
-  // Touch: 1.5 cells at pickup, rising to 2 cells as the finger travels up
+  // Touch: 2 cells at pickup, rising to 2.6 cells as the finger travels up
   // from where it picked the piece (so a piece headed for the top rows
   // clears the finger even more). Capped and gentle, so the drop target
   // (which uses the same lift) stays predictable. Mouse: no lift.
-  var LIFT_BASE = 1.5, LIFT_EXTRA = 0.5, LIFT_RANGE_PX = 220;
+  var LIFT_BASE = 2.0, LIFT_EXTRA = 0.6, LIFT_RANGE_PX = 220; // 2026-10-05: the user wanted it higher still on the phone
   function liftFor(e, size, risePx) {
     if (!e || e.pointerType !== 'touch') return 0;
     var t = Math.max(0, Math.min(1, (risePx || 0) / LIFT_RANGE_PX));

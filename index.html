@@ -6163,25 +6163,35 @@
   function boardOrigin() { var r = boardEl.getBoundingClientRect(); return { x: r.left + boardEl.clientLeft + cellEls[0].offsetLeft, y: r.top + boardEl.clientTop + cellEls[0].offsetTop }; }
   function gapSize() { return parseFloat(getComputedStyle(boardEl).gap) || 4; }
 
-  // A press on the pool's empty space picks the nearest piece: every piece's
-  // grab zone extends into the gap around it — above and below in a single
-  // row, up to the midpoint between rows, halfway to a neighbour sideways,
-  // and over a used piece's empty slot — never past the pool box. People
-  // press "where the block is", not on the block.
-  var TRAY_REACH_CELLS = 2.2;
+  // A press on the pool's empty space picks the nearest piece. Every
+  // piece's grab zone runs all the way to the pool's edges on the sides
+  // where it has no neighbour (top and bottom in a single row, the outer
+  // side of each of two rows, the far left and right), and halfway to a
+  // neighbour where it has one — including across the empty slot of a
+  // piece that was already played. The halfway line carries a DEAD ZONE:
+  // a press within ~0.2 cell of being equidistant from two pieces picks
+  // nothing, because that is a finger aimed at the gap, not at a block.
+  // People press "where the block is", not on the block.
+  var TRAY_DEAD_CELLS = 0.2, TRAY_DEAD_MIN_PX = 5, TRAY_DEAD_MAX_PX = 10;
+  function trayDeadHalfPx() { var cell = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tray-cell')) || cellSize(); return Math.max(TRAY_DEAD_MIN_PX, Math.min(TRAY_DEAD_MAX_PX, cell * TRAY_DEAD_CELLS)); }
+  function trayPieceAt(x, y) {
+    var ranked = [];
+    Array.prototype.forEach.call(trayEl.querySelectorAll('.tray-piece:not(.used)'), function (el) {
+      var r = el.getBoundingClientRect();
+      var dx = Math.max(r.left - x, 0, x - r.right), dy = Math.max(r.top - y, 0, y - r.bottom);
+      ranked.push({ el: el, d: Math.hypot(dx, dy) });
+    });
+    ranked.sort(function (a, b) { return a.d - b.d; });
+    if (!ranked.length) return null;
+    if (ranked.length > 1 && ranked[1].d - ranked[0].d < 2 * trayDeadHalfPx()) return null; // the gap's middle
+    return ranked[0].el;
+  }
   trayEl.addEventListener('pointerdown', function (e) {
     if (e.target.closest('.tray-piece')) return; // the piece's own handler has it
     if (locked || animating || drag) return;
     if (currentMode === 'duel' && !isMyTurnNow() && !premoveAllowed()) return;
-    var x = e.clientX, y = e.clientY, best = null, bestD = Infinity;
-    Array.prototype.forEach.call(trayEl.querySelectorAll('.tray-piece:not(.used)'), function (el) {
-      var r = el.getBoundingClientRect();
-      var dx = Math.max(r.left - x, 0, x - r.right), dy = Math.max(r.top - y, 0, y - r.bottom);
-      var d = Math.hypot(dx, dy);
-      if (d < bestD) { bestD = d; best = el; }
-    });
-    var cell = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tray-cell')) || cellSize();
-    if (!best || bestD > cell * TRAY_REACH_CELLS) return;
+    var best = trayPieceAt(e.clientX, e.clientY);
+    if (!best) return;
     e.preventDefault();
     beginPointer(parseInt(best.getAttribute('data-piece-idx'), 10), e, best);
   });

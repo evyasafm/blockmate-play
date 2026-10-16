@@ -347,7 +347,8 @@
     .kpi span { color: var(--muted); }
     .kpi b { color: var(--accent); font-weight: 800; }
     .modetab:disabled { opacity: 0.4; cursor: default; }
-    .togglegroup { margin-left: 0; }
+    .togglegroup { margin-left: auto; }
+    .toggle-btn.home-btn { font-size: 17px; padding: 5px 9px; flex-shrink: 0; }
     /* Narrow phones (360–390 px): the bar keeps every control on one line. */
     @media (max-width: 400px) {
       .modetab { padding: 8px 9px; font-size: 12px; }
@@ -599,7 +600,77 @@
       animation: hintPulse 1.1s ease-in-out infinite;
       box-shadow: 0 0 0 3px var(--accent);
     }
+    /* ---------- Home screen ----------
+       The logo's "t" is a chess king built from blocks; under it one card per
+       mode. Covers the game (z 60) but stays under the modals (z 70), so
+       Settings and the level map open on top of it. */
+    :root { --c-survive: #4cc9f0; --c-survive2: #80ed99; --c-stuck: #ff5d8f; --c-stuck2: #ff9f6b; --c-duel: #c77dff; --c-duel2: #ffb703; }
+    :root[data-theme="paper"] { --c-survive: #0e8fb7; --c-survive2: #1f9d55; --c-stuck: #d6336c; --c-stuck2: #e8590c; --c-duel: #8b3fd9; --c-duel2: #c27c00; }
+    .home {
+      position: fixed; inset: 0; z-index: 60; overflow-y: auto; overscroll-behavior: contain;
+      background: radial-gradient(circle at 50% 18%, var(--bg-hi), var(--bg) 62%);
+      display: flex; justify-content: center; touch-action: pan-y;
+      padding: calc(14px + env(safe-area-inset-top, 0px)) calc(18px + env(safe-area-inset-right, 0px))
+               calc(22px + env(safe-area-inset-bottom, 0px)) calc(18px + env(safe-area-inset-left, 0px));
+    }
+    .home.leaving { opacity: 0; transform: scale(1.03); transition: opacity 180ms ease, transform 180ms ease; pointer-events: none; }
+    .home-inner { width: 100%; max-width: 440px; min-height: 100%; display: flex; flex-direction: column; align-items: stretch; justify-content: center; }
+    .home-top { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: auto; }
+    .home-foot { margin-bottom: auto; }
+    .home-top .toggle-btn { padding: 8px 11px; font-size: 16px; }
+    .home-hero { display: flex; flex-direction: column; align-items: center; padding: 18px 0 clamp(26px, 6vh, 54px); }
+    .logo { margin: 0; display: flex; flex-direction: column; align-items: center; line-height: 1; }
+    .logo-word {
+      display: flex; align-items: flex-end; font-weight: 900; letter-spacing: -0.035em; color: var(--text);
+      font-size: clamp(42px, 13.5vw, 62px); font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    /* The king stands on the baseline and rises above the letters, like a t's stem. */
+    .logo-king { height: 1.1em; width: auto; margin: 0 0.04em 0.14em 0.03em; overflow: visible; filter: drop-shadow(0 4px 10px rgba(199,125,255,0.35)); }
+    .logo-king g { animation: kingDrop 520ms cubic-bezier(.2,.9,.3,1.25) both; animation-delay: calc(var(--i) * 28ms + 120ms); }
+    @keyframes kingDrop { 0% { opacity: 0; transform: translateY(-22px); } 100% { opacity: 1; transform: none; } }
+    .logo-sub { display: flex; align-items: center; gap: 12px; margin-top: 8px; font-size: clamp(13px, 3.8vw, 16px); font-weight: 800; letter-spacing: 0.55em; color: var(--muted); padding-left: 0.55em; }
+    .logo-sub::before, .logo-sub::after { content: ''; width: 34px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--grid-line)); }
+    .logo-sub::after { transform: scaleX(-1); }
+    .home-tag { margin: 18px 0 0; font-size: 14px; color: var(--muted); font-style: italic; }
+    .home-modes { display: flex; flex-direction: column; gap: 12px; }
+    .mode-card {
+      --c1: var(--c-survive); --c2: var(--c-survive2);
+      position: relative; display: flex; align-items: center; gap: 14px; width: 100%; min-height: 84px;
+      padding: 14px 16px 14px 14px; border-radius: 18px; cursor: pointer; text-align: left; color: var(--text);
+      background: linear-gradient(100deg, color-mix(in srgb, var(--c1) 16%, var(--panel)), var(--panel) 62%);
+      border: 1px solid color-mix(in srgb, var(--c1) 38%, var(--grid-line));
+      box-shadow: 0 8px 22px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.05);
+      transition: transform 90ms ease, border-color 120ms ease, box-shadow 120ms ease;
+      animation: cardIn 420ms cubic-bezier(.2,.9,.3,1.1) both; animation-delay: calc(var(--n) * 70ms + 260ms);
+      font: inherit;
+    }
+    .mode-card::before { content: ''; position: absolute; left: 0; top: 16px; bottom: 16px; width: 4px; border-radius: 0 4px 4px 0; background: linear-gradient(var(--c1), var(--c2)); }
+    .mode-card:hover { border-color: var(--c1); }
+    .mode-card:active { transform: scale(0.985); }
+    .mode-card:focus-visible { outline: 2px solid var(--c1); outline-offset: 2px; }
+    .mode-card.stuck { --c1: var(--c-stuck); --c2: var(--c-stuck2); }
+    .mode-card.duel { --c1: var(--c-duel); --c2: var(--c-duel2); min-height: 92px; }
+    @keyframes cardIn { 0% { opacity: 0; transform: translateY(14px); } 100% { opacity: 1; transform: none; } }
+    .mc-icon { flex: 0 0 auto; width: 54px; height: 54px; border-radius: 13px; background: var(--empty); border: 1px solid var(--grid-line); display: grid; place-items: center; position: relative; }
+    .mc-icon svg { width: 42px; height: 42px; }
+    .mc-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .mc-title { font-size: 22px; font-weight: 900; letter-spacing: -0.01em; line-height: 1.05; }
+    .mc-title i { font-style: normal; background: linear-gradient(90deg, var(--c1), var(--c2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .mc-sub { font-size: 13px; color: var(--muted); line-height: 1.3; }
+    .mc-side { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .mc-prog { font-size: 13px; font-weight: 800; color: var(--c1); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .mc-chip { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 7px; border-radius: 99px; color: var(--on-accent); background: linear-gradient(90deg, var(--c1), var(--c2)); }
+    .mc-arrow { font-size: 22px; color: var(--muted); line-height: 1; }
+    .home-foot { display: flex; justify-content: center; gap: 10px; margin-top: 18px; }
+    .home-foot .ctrl { flex: 0 1 auto; padding: 10px 16px; font-size: 13px; }
+    @media (max-height: 640px) { .home-hero { padding: 4px 0 16px; } .mode-card { min-height: 72px; padding-top: 10px; padding-bottom: 10px; } .home-tag { margin-top: 10px; } }
+    @media (max-width: 370px) { .mc-sub { font-size: 12px; } .mc-icon { width: 48px; height: 48px; } .mc-icon svg { width: 36px; height: 36px; } .mode-card { gap: 11px; } }
+    /* KPI colour keys in the top bar match the home cards. */
+    .kpi span.kd { width: 8px; height: 8px; border-radius: 2px; display: inline-block; align-self: center; }
+    .kpi .kd.s { background: var(--c-survive); } .kpi .kd.k { background: var(--c-stuck); } .kpi .kd.d { background: var(--c-duel); }
+
     @media (prefers-reduced-motion: reduce) {
+      .logo-king g, .mode-card { animation: none; }
       .cell.hint-target, .tray-piece.hint-piece { animation: none; outline: 2px solid var(--accent); }
       .scoreDisplay .scoreValue.bump { animation: none; }
       button.ctrl.pulse { animation: none; background: rgba(76,201,240,0.18); }
@@ -607,16 +678,53 @@
   </style>
 </head>
 <body>
+  <div class="home" id="home" hidden>
+    <div class="home-inner">
+      <div class="home-top">
+        <button class="toggle-btn" id="homeProgressBtn" title="Progress" aria-label="Progress">🏆</button>
+        <button class="toggle-btn" id="homeSettingsBtn" title="Settings" aria-label="Settings">⚙</button>
+      </div>
+      <div class="home-hero">
+        <h1 class="logo" aria-label="Blockmate Puzzle">
+          <span class="logo-word" aria-hidden="true"><span>Blockma</span><svg class="logo-king" id="logoKing" viewBox="0 0 50 80"></svg><span>e</span></span>
+          <span class="logo-sub" aria-hidden="true">PUZZLE</span>
+        </h1>
+        <p class="home-tag">Every board has an answer.</p>
+      </div>
+      <div class="home-modes">
+        <button class="mode-card survive" data-home="survive" style="--n:0">
+          <span class="mc-icon"><svg data-icon="survive" viewBox="0 0 42 42"></svg></span>
+          <span class="mc-text"><span class="mc-title"><i>Survive</i></span><span class="mc-sub">Place every piece from the pool</span></span>
+          <span class="mc-side"><span class="mc-chip" hidden>Continue</span><span class="mc-prog" id="homeProgSurvive"></span></span>
+        </button>
+        <button class="mode-card stuck" data-home="lose" style="--n:1">
+          <span class="mc-icon"><svg data-icon="stuck" viewBox="0 0 42 42"></svg></span>
+          <span class="mc-text"><span class="mc-title"><i>Stuck</i></span><span class="mc-sub">Leave at least one piece with no place on the board</span></span>
+          <span class="mc-side"><span class="mc-chip" hidden>Continue</span><span class="mc-prog" id="homeProgStuck"></span></span>
+        </button>
+        <button class="mode-card duel" data-home="duel" style="--n:2">
+          <span class="mc-icon"><svg data-icon="duel" viewBox="0 0 42 42"></svg></span>
+          <span class="mc-text"><span class="mc-title"><i>Duel</i></span><span class="mc-sub">Take turns from one pool — whoever can't place, loses</span></span>
+          <span class="mc-side"><span class="mc-chip" hidden>Continue</span><span class="mc-prog" id="homeProgDuel"></span></span>
+        </button>
+      </div>
+      <div class="home-foot">
+        <button class="ctrl" id="homeDailyBtn">▦ Levels &amp; today's puzzle</button>
+      </div>
+    </div>
+  </div>
   <div id="app">
     <header>
       <div class="modebar" id="modeBar">
+        <button class="toggle-btn home-btn" id="homeBtn" title="Home" aria-label="Home">⌂</button>
         <button class="modetab active" data-mode="survive">Survive</button>
-        <button class="modetab" data-mode="lose">Lose</button>
+        <button class="modetab" data-mode="lose">Stuck</button>
         <button class="modetab" data-mode="duel">Duel</button>
-        <div class="kpibar" id="kpiBar" role="button" tabindex="0" aria-label="Progress" title="Levels won: Survive · Lose · Duel — tap for full progress">
-          <span class="kpi"><span>S</span><b id="kpiSurvive">0</b></span>
-          <span class="kpi"><span>L</span><b id="kpiLose">0</b></span>
-          <span class="kpi"><span>D</span><b id="kpiDuel">0</b></span>
+        <!-- The win counters moved to the home cards; the element stays for the progress code. -->
+        <div class="kpibar" id="kpiBar" hidden role="button" tabindex="0" aria-label="Progress" title="Levels won: Survive · Stuck · Duel — tap for full progress">
+          <span class="kpi"><span class="kd s"></span><b id="kpiSurvive">0</b></span>
+          <span class="kpi"><span class="kd k"></span><b id="kpiLose">0</b></span>
+          <span class="kpi"><span class="kd d"></span><b id="kpiDuel">0</b></span>
         </div>
         <div class="togglegroup">
           <button class="toggle-btn" id="settingsBtn" title="Settings">⚙<span class="badge" id="inboxBadge" hidden></span></button>
@@ -727,7 +835,7 @@
         <button class="toggle-btn" id="hintPulseToggleBtn" aria-pressed="true">On</button>
       </div>
       <div class="setting-row">
-        <div><div class="setting-label">Mix modes</div><div class="setting-sub">After a win, the next level comes from the other mode — Survive, then Lose, then Survive…</div></div>
+        <div><div class="setting-label">Mix modes</div><div class="setting-sub">After a win, the next level comes from the other mode — Survive, then Stuck, then Survive…</div></div>
         <button class="toggle-btn" id="mixToggleBtn" aria-pressed="false">Off</button>
       </div>
       <div class="setting-row">
@@ -735,7 +843,7 @@
         <button class="toggle-btn" id="rewindToggleBtn" aria-pressed="true">On</button>
       </div>
       <div class="setting-row">
-        <div><div class="setting-label">Tutorial</div><div class="setting-sub">Guided intro for Survive, Lose or Duel — pick one, or all three.</div></div>
+        <div><div class="setting-label">Tutorial</div><div class="setting-sub">Guided intro for Survive, Stuck or Duel — pick one, or all three.</div></div>
         <button class="toggle-btn" id="tutorialAgainBtn">Show</button>
       </div>
       <div class="setting-group">Feel</div>
@@ -804,7 +912,7 @@
         <button class="toggle-btn" id="premiumToggleBtn" aria-pressed="true">On</button>
       </div>
       <div class="setting-row">
-        <div><div class="setting-label">Level builder</div><div class="setting-sub">Design your own Survive or Lose stage: paint the grey cells, pick the pieces, test it, get its rating, submit it for the game. Premium.</div></div>
+        <div><div class="setting-label">Level builder</div><div class="setting-sub">Design your own Survive or Stuck stage: paint the grey cells, pick the pieces, test it, get its rating, submit it for the game. Premium.</div></div>
         <button class="toggle-btn" id="builderBtn">Open</button>
       </div>
       <div class="setting-group">Progress</div>
@@ -839,7 +947,7 @@
       <div id="builderLocked" class="bnote" hidden>Level building is a <b>Premium</b> feature — turn Premium on in Settings to open it.</div>
       <div id="builderBody">
         <div class="brow">
-          <div class="seg" id="bModeSeg"><button class="segbtn active" data-bmode="survive">Survive</button><button class="segbtn" data-bmode="lose">Lose</button></div>
+          <div class="seg" id="bModeSeg"><button class="segbtn active" data-bmode="survive">Survive</button><button class="segbtn" data-bmode="lose">Stuck</button></div>
           <input class="toggle-input bname" id="bName" maxlength="24" placeholder="Level name" />
         </div>
         <div class="bhint">Tap cells to paint them grey. <button class="linkbtn" id="bClear">Clear</button> · <button class="linkbtn" id="bRandom">Random</button> · <button class="linkbtn" id="bNew">New level</button></div>
@@ -885,7 +993,7 @@
   <div class="modal" role="dialog" aria-modal="true" id="mapModal">
     <div class="modal-card">
       <div class="modal-title"><span>Levels</span><button class="ctrl" id="mapCloseBtn">Close</button></div>
-      <div class="map-tabs"><button class="ctrl" data-mapmode="survive">Survive</button><button class="ctrl" data-mapmode="lose">Lose</button></div>
+      <div class="map-tabs"><button class="ctrl" data-mapmode="survive">Survive</button><button class="ctrl" data-mapmode="lose">Stuck</button></div>
       <div id="mapBody"></div>
     </div>
   </div>
@@ -952,7 +1060,7 @@
       <div class="modal-title"><span>Show the tutorial for…</span><button class="ctrl" id="tutorialCloseBtn">Close</button></div>
       <div class="tut-pick">
         <button class="ctrl" data-tut="survive">Survive</button>
-        <button class="ctrl" data-tut="lose">Lose</button>
+        <button class="ctrl" data-tut="lose">Stuck</button>
         <button class="ctrl" data-tut="duel">Duel</button>
         <button class="ctrl assist" data-tut="all">All three</button>
       </div>
@@ -1496,6 +1604,93 @@
       pieces: ['J', 'dot', 'J', 'pent_v', 'Lsmall_r180', 'rect_v']
     },
 
+    // ---- SURVIVE — BANK 7: hand-designed riddles (2026-10-14, riddle.js). Each level is built around
+    //      one named mechanic; ordered by the depth of the idea, not by the careless-play rate. ----
+    {
+      // Riddle: A cross of holes. The 5-bar fits the row now, but it would
+      // plug the column; the 3-bar must clear the column first. careless ~7%
+      // (Hard), 1 solution.
+      id: 269, mode: 'survive', name: 'Big Piece Last', difficulty: 'Hard', solutions: 1,
+      board: ['..###..#', '###.###.', '#.....#.', '.##.####', '#.####.#', '#.####.#', '#.####.#', '##.#.##.'],
+      pieces: ['tri_v', 'pent_h', 'pent_v']
+    },
+    {
+      // Riddle: S and Z share one 2x3 pocket. The 3-bar clears row 5; against
+      // the right edge only S can use the two holes above the cleared row. So
+      // Z takes the pocket. careless ~25% (Medium), 1 solution.
+      id: 270, mode: 'survive', name: 'Musical Chairs', difficulty: 'Medium', solutions: 1,
+      board: ['#.###.##', '######.#', '.#...###', '.#...###', '.#####..', '###...##', '.#######', '###.###.'],
+      pieces: ['S', 'Z', 'tri_h']
+    },
+    {
+      // Riddle: Three 4-deep shafts. In one the 4-bar vanishes and the column
+      // opens for the 5-bar; the other two are decoys, and one of them is the
+      // J's only home. careless ~6% (Hard), 1 solution.
+      id: 271, mode: 'survive', name: 'Ghost', difficulty: 'Hard', solutions: 1,
+      board: ['#.##.##.', '.####.##', '.#.##.##', '.#.##.##', '.#.#..##', '#...###.', '.####.##', '###.##.#'],
+      pieces: ['quad_v', 'pent_v', 'J', 'T']
+    },
+    {
+      // Riddle: Row 4 has three holes that only the domino AND the small L
+      // can fill together; both have decoys. The T-pentomino needs the
+      // cleared row plus the pocket above it. careless ~2% (Hard), 1
+      // solution.
+      id: 272, mode: 'survive', name: 'Two Keys', difficulty: 'Hard', solutions: 1,
+      board: ['#...#.##', '##.##..#', '.###.###', '#.##.#.#', '#.####..', '.##.#.##', '###.###.', '.#.#.##.'],
+      pieces: ['dom_v', 'Lsmall', 'pentT_r180']
+    },
+    {
+      // Riddle: Two 2-tall pockets with a full column between them. The 4-bar
+      // completes that column, the clear joins the pockets into the 2x3 the
+      // brick needs, and the corner goes under it. The corner's own slot
+      // blocks the 4-bar. careless ~10% (Hard), 1 solution.
+      id: 273, mode: 'survive', name: 'Bridge', difficulty: 'Hard', solutions: 1,
+      board: ['.###.#.#', '.####..#', '#.#.##.#', '#.#.##.#', '##.####.', '##..####', '#..####.', '##.###.#'],
+      pieces: ['quad_v', 'rect_h', 'corner']
+    },
+    {
+      // Riddle: Both bars have a decoy. The row bar must go first: its clear
+      // opens the crossing cell, which is the only way the column bar's slot
+      // becomes three tall. Then the diagonal threads one cell from each
+      // cleared line plus one hole. careless ~3% (Hard), 1 solution.
+      id: 274, mode: 'survive', name: 'Needle\'s Eye', difficulty: 'Hard', solutions: 1,
+      board: ['.#.#####', '.###.##.', '.#.#####', '#...####', '#.#.#.##', '#####.#.', '...####.', '.#.###.#'],
+      pieces: ['tri_h', 'tri_v', 'diag3']
+    },
+    {
+      // Riddle: The 3-bar clears the bottom row, which lets the L into column
+      // 0, which clears column 0, which is the T's only home. careless ~3%
+      // (Hard), 1 solution.
+      id: 275, mode: 'survive', name: 'Chain', difficulty: 'Hard', solutions: 1,
+      board: ['#.#.##.#', '#.####.#', '###....#', '##.###..', '##.#.###', '.###.##.', '.####.##', '##...###'],
+      pieces: ['tri_h', 'L', 'T_r270']
+    },
+    {
+      // Riddle: Rows 3 and 4 each miss one cell in the same column: the
+      // vertical domino clears both at once. The J needs the band plus the
+      // hole above its right edge, which fixes the bricks. careless ~3%
+      // (Hard), 1 solution.
+      id: 276, mode: 'survive', name: 'Skyscraper', difficulty: 'Hard', solutions: 1,
+      board: ['##.##.##', '##.#####', '#######.', '######.#', '######.#', '.#######', '###..###', '#.######'],
+      pieces: ['dom_v', 'rect_h', 'rect_h', 'J']
+    },
+    {
+      // Riddle: The logo's king as a hole. The T must take the crown, the big
+      // square the body, the bars the shoulders and the base. Every other T
+      // or square spot is a trap. careless ~29% (Medium), 1 solution.
+      id: 277, mode: 'survive', name: 'Blockmate', difficulty: 'Medium', solutions: 1,
+      board: ['#.#.#...', '##...##.', '.##.###.', '#.....#.', '##...##.', '##...##.', '##...##.', '#.....#.'],
+      pieces: ['T_r180', 'pent_h', 'pent_h', 'sq3']
+    },
+    {
+      // Riddle: 10 holes, 23 cells of pieces. The 2-cell diagonal fits in two
+      // places; one completes two rows AND two columns at once. careless ~5%
+      // (Hard), 1 solution.
+      id: 278, mode: 'survive', name: 'Crossfire', difficulty: 'Hard', solutions: 1,
+      board: ['##.#####', '.#######', '.####.##', '###.####', '####.###', '#.######', '.######.', '#.###..#'],
+      pieces: ['diag2_r90', 'sq3', 'rect_h', 'rect_v']
+    },
+
     // ---- LOSE — BANK 1 (sorted easiest → hardest by measured careless-play rate; merge-levels.js) ----
     {
       // Generated 2026-09-27 (generate.js). careless ~55% (Easy), minClears = 2, 4 solutions.
@@ -1871,8 +2066,99 @@
       // (Hard).
       id: 210, mode: 'lose', name: 'Last Stand', difficulty: 'Hard', solutions: 4,
       board: THICK, pieces: ['dom_h', 'dom_v', 'Lsmall_r180', 'S_r90']
+    },
+    // ---- LOSE — BANK 7: hand-designed riddles (2026-10-14, riddle.js). Each level is built around
+    //      one named mechanic; ordered by the depth of the idea, not by the careless-play rate. ----
+    {
+      // Riddle: A seven-cell corridor, a 5-bar and a domino. Whichever goes
+      // first must go in the middle: the domino at either end leaves five
+      // cells, the bar at either end leaves two. careless ~34% (Medium), 5
+      // solutions.
+      id: 279, mode: 'lose', name: 'Middle of the Road', difficulty: 'Medium', solutions: 5,
+      board: ['####.##.', '##.#####', '#####.##', '.......#', '#.#####.', '##.####.', '####.##.', '###.####'],
+      pieces: ['pent_h', 'dom_h', 'tri_v']
+    },
+    {
+      // Riddle: The T has one home. The vertical domino fits its stem exactly
+      // — and completes the column, which gives the T a second home. The
+      // horizontal domino must do the job; the vertical one goes to a dump.
+      // careless ~8% (Hard), 4 solutions.
+      id: 280, mode: 'lose', name: 'Hold Your Fire', difficulty: 'Hard', solutions: 4,
+      board: ['##.###.#', '.#####.#', '##...##.', '###.##.#', '#######.', '...#.##.', '####..##', '######.#'],
+      pieces: ['T', 'dom_h', 'dom_v']
+    },
+    {
+      // Riddle: The T has two homes. Don't place it: plug both doors with the
+      // domino and the small L, which each have tempting dumps. careless ~7%
+      // (Hard), 3 solutions.
+      id: 281, mode: 'lose', name: 'Two Doors', difficulty: 'Hard', solutions: 3,
+      board: ['####.#..', '#...####', '##.#.###', '.######.', '.#.####.', '####...#', '..###.##', '#.###.##'],
+      pieces: ['T', 'dom_v', 'Lsmall_r180']
+    },
+    {
+      // Riddle: A seven-cell corridor with two roots under it; the T can
+      // stand on either. The 4-bar must cover both stems at once — only its
+      // two middle positions do. careless ~17% (Hard), 2 solutions.
+      id: 282, mode: 'lose', name: 'Roots', difficulty: 'Hard', solutions: 2,
+      board: ['####.##.', '###.####', '.......#', '#.###.##', '###.###.', '#.#####.', '.######.', '##.###.#'],
+      pieces: ['quad_h', 'T', 'tri_v']
+    },
+    {
+      // Riddle: A 2x2 hole under a 3-wide bar: the T's stem is the key that
+      // breaks the square's only home. The T has a decoy slot; a domino in
+      // the square completes a row and gives the square a new home. careless
+      // ~8% (Hard), 3 solutions.
+      id: 283, mode: 'lose', name: 'Keyhole', difficulty: 'Hard', solutions: 3,
+      board: ['#####..#', '.######.', '##...#..', '###..###', '###..###', '..######', '#...##.#', '##.###.#'],
+      pieces: ['T', 'sq2', 'dom_h']
+    },
+    {
+      // Riddle: The square has four homes: three in a 2x4 room and one 2x2
+      // pocket. Only the 3-bar can kill the whole room in one move; the
+      // domino must take the pocket. The bar has two dumps, so it can't be
+      // stranded instead. careless ~4% (Hard), 8 solutions.
+      id: 284, mode: 'lose', name: 'Wide and Narrow', difficulty: 'Hard', solutions: 8,
+      board: ['##...#..', '#.###..#', '#....###', '#....###', '###.###.', '.#####..', '#.####..', '##...#.#'],
+      pieces: ['sq2', 'tri_h', 'dom_h']
+    },
+    {
+      // Riddle: A checkerboard of holes: only diagonal pieces fit. The
+      // 3-diagonal has two staircases; one 2-diagonal on the main axis breaks
+      // both at once, the other goes to a corner. careless ~6% (Hard), 6
+      // solutions.
+      id: 285, mode: 'lose', name: 'Checkerboard', difficulty: 'Hard', solutions: 6,
+      board: ['.######.', '#.####.#', '##.#.###', '###.#.##', '##.#.###', '###.#.##', '#.####.#', '.######.'],
+      pieces: ['diag3', 'diag2_r90', 'diag2']
+    },
+    {
+      // Riddle: A six-step staircase. The 3-diagonal climbs any three
+      // consecutive steps; the 2-diagonal must break it exactly in the middle
+      // — anywhere else leaves three steps in a row. careless ~1% (Hard), 1
+      // solution.
+      id: 286, mode: 'lose', name: 'Zigzag', difficulty: 'Hard', solutions: 1,
+      board: ['#.#####.', '.#####..', '.####.##', '.###.###', '.##.####', '.#.#####', '..######', '##......'],
+      pieces: ['diag3', 'diag2', 'dom_v']
+    },
+    {
+      // Riddle: One square, two doors, two T-shaped keys. The upright T's
+      // stem drops into the upper door; the sideways T's nub pokes into the
+      // lower one. Each key also fits the other door - but then one door
+      // stays open. careless ~11% (Hard), 2 solutions.
+      id: 287, mode: 'lose', name: 'Double Lock', difficulty: 'Hard', solutions: 2,
+      board: ['.###...#', '#...#.##', '##..###.', '.#..####', '####.##.', '.###...#', '..##...#', '.#.###.#'],
+      pieces: ['T', 'T_r270', 'sq2']
+    },
+    {
+      // Riddle: The square has three homes. The upper door's rows are
+      // tripwires, so only the vertical domino may plug it; the middle door's
+      // columns are tripwires, so only the horizontal domino may; the small L
+      // takes the lower door. One assignment works. careless ~1% (Hard), 6
+      // solutions.
+      id: 288, mode: 'lose', name: 'Three Doors', difficulty: 'Hard', solutions: 6,
+      board: ['.####...', '#..#####', '#..#####', '.####..#', '###..##.', '.##..###', '...##..#', '##.##..#'],
+      pieces: ['sq2', 'dom_v', 'dom_h', 'Lsmall']
     }
-  ];;;;;
+  ];
 
   var api = { SHAPES: SHAPES, LEVELS: LEVELS, COLORS: COLORS, parseBoard: parseBoard };
 
@@ -3282,7 +3568,7 @@
       to: 'ALL',
       date: '2026-09-27',
       title: 'Welcome to the Blockmate beta',
-      body: 'Thanks for testing. Three modes: Survive (place every piece), Lose (strand a piece on purpose), and Duel (take turns from a shared pool — whoever can\'t place, loses). Found something odd? Settings → Report a problem sends it straight to me, with your game log attached. — Evyasaf'
+      body: 'Thanks for testing. Three modes: Survive (place every piece), Stuck (leave a piece with no place, on purpose), and Duel (take turns from a shared pool — whoever can\'t place, loses). Found something odd? Settings → Report a problem sends it straight to me, with your game log attached. — Evyasaf'
     }
   ];
 
@@ -3774,7 +4060,7 @@
     { id: 'a', label: 'Empty', title: 'Empty board, shared pool' },
     { id: 'b', label: 'Filled', title: 'Some cells already filled (pick how many)' },
     { id: 's', label: 'Survive', title: 'Survive puzzles in turns' },
-    { id: 'l', label: 'Lose', title: 'Lose puzzles in turns' }
+    { id: 'l', label: 'Stuck', title: 'Stuck puzzles in turns' }
   ];
   var OPPONENTS = [
     { id: 'easy', label: 'AI Easy', hint: 'Random legal moves.' },
@@ -4543,7 +4829,7 @@
     });
   }
   function variantLabel(v, presets, clockSec) {
-    var base = v === 'a' ? 'Empty board' : v === 'b' ? 'Filled · ' + presets + ' grey cells' : v === 's' ? 'Survive puzzles' : 'Lose puzzles';
+    var base = v === 'a' ? 'Empty board' : v === 'b' ? 'Filled · ' + presets + ' grey cells' : v === 's' ? 'Survive puzzles' : 'Stuck puzzles';
     return base + (clockSec ? ' · ' + clockLabel(clockSec) + ' each' : ' · no clock') + (duelIncMs() ? ' +' + (duelIncMs() / 1000) + 's/move' : '');
   }
   // Both phones: "<mode> — starting in 3, 2, 1", then the host deals.
@@ -5009,7 +5295,7 @@
   function dailyResultText(lvl) {
     var d = dailyDone()[lvl.key] && dailyDone()[lvl.key][lvl.mode];
     var secs = d ? d.secs : 0, resets = d ? d.resets : 0;
-    return 'Blockmate Daily #' + DAILY.number(lvl.key) + ' · ' + (lvl.mode === 'lose' ? 'Lose' : 'Survive') + ' · ' + lvl.difficulty + '\nSolved in ' + formatTime(secs * 1000) + (resets ? ' · ' + resets + (resets === 1 ? ' reset' : ' resets') : ' · no resets') + ' · ' + solutionsLabel(lvl.solutions) + (lvl.solutions === 1 ? ' solution' : ' solutions') + '\n🟦'.repeat(Math.min(8, lvl.pieces.length)) + '\nblockmate.app';
+    return 'Blockmate Daily #' + DAILY.number(lvl.key) + ' · ' + (lvl.mode === 'lose' ? 'Stuck' : 'Survive') + ' · ' + lvl.difficulty + '\nSolved in ' + formatTime(secs * 1000) + (resets ? ' · ' + resets + (resets === 1 ? ' reset' : ' resets') : ' · no resets') + ' · ' + solutionsLabel(lvl.solutions) + (lvl.solutions === 1 ? ' solution' : ' solutions') + '\n🟦'.repeat(Math.min(8, lvl.pieces.length)) + '\nblockmate.app';
   }
 
   // ---------- Level map ----------
@@ -5026,7 +5312,7 @@
     ['survive', 'lose'].forEach(function (m) {
       var lvl = dailyLevel(m, k), done = dailyIsDone(k, m);
       var box = document.createElement('button'); box.className = 'daily-box' + (done ? ' done' : ''); box.setAttribute('data-daily', m);
-      box.innerHTML = '<b>' + (m === 'lose' ? 'Lose' : 'Survive') + '</b><small>#' + DAILY.number(k) + (done ? ' · solved ✓' : '') + '</small>' + (lvl ? '<span class="leveltag ' + lvl.difficulty + '">' + lvl.difficulty + '</span>' : '<small>unavailable</small>');
+      box.innerHTML = '<b>' + (m === 'lose' ? 'Stuck' : 'Survive') + '</b><small>#' + DAILY.number(k) + (done ? ' · solved ✓' : '') + '</small>' + (lvl ? '<span class="leveltag ' + lvl.difficulty + '">' + lvl.difficulty + '</span>' : '<small>unavailable</small>');
       box.addEventListener('click', function () { playDaily(m, k); });
       line.appendChild(box);
     });
@@ -5277,7 +5563,7 @@
       tutorialTextEl.textContent = 'Every board has an answer. Drag the bar into the slot — full lines clear away.';
     } else if (tutorialMode === 'lose') {
       tutorialTextEl.textContent = left === pieces.length
-        ? 'Lose is the opposite game: you win when no remaining piece fits anywhere. Drag the glowing piece onto the glowing cells.'
+        ? 'Stuck is the opposite game: you win when no remaining piece fits anywhere. Drag the glowing piece onto the glowing cells.'
         : (left === 1 ? 'Last one — glowing piece on the glowing cells.' : left + ' left. Glowing piece, glowing cells — the goal is to leave the rest with nowhere to go.');
     } else {
       tutorialTextEl.textContent = left === pieces.length
@@ -5299,7 +5585,7 @@
     var t;
     if (duelIsPuzzle()) {
       t = g.moves === 0
-        ? 'Puzzle duel: you take turns on one ' + (puzzleMode() === 'lose' ? 'Lose' : 'Survive') + ' puzzle. A move that makes it impossible loses; finishing it wins.'
+        ? 'Puzzle duel: you take turns on one ' + (puzzleMode() === 'lose' ? 'Stuck' : 'Survive') + ' puzzle. A move that makes it impossible loses; finishing it wins.'
         : 'Think a move ahead — every placement must keep the puzzle possible. Your clock only runs on your turn.';
     } else if (g.moves === 0) {
       t = 'You\'re Blue, ' + who + '. You share this pool — ' + (g.turn === 'A' ? 'place any piece to start' : 'Red starts, then you') + ', one piece per turn.';
@@ -5836,13 +6122,13 @@
     else solMsg = (isNewSolution ? 'New solution' : 'Found that one before') + ' — ' + found + ' of ' + solutionsLabel(lvl.solutions) + '.';
     var target = nextTarget();
     var next = !target ? 'That was the last level here — pick another from Jump to.' :
-      target.mode !== currentMode ? 'Tap the board for the next ' + (target.mode === 'lose' ? 'Lose' : 'Survive') + ' level.' : 'Tap the board for the next level.';
+      target.mode !== currentMode ? 'Tap the board for the next ' + (target.mode === 'lose' ? 'Stuck' : 'Survive') + ' level.' : 'Tap the board for the next level.';
     setStatus(title, false);
     logEvent('win', { mode: currentMode, id: lvl.id, newSolution: isNewSolution, found: found, score: lastStageResult ? lastStageResult.finalScore : null });
     var elapsed = Date.now() - levelStartTime, perfect = !hintsUsed && !resetCount && !rewindsUsed;
     var acts = [];
     if (lvl.intro) acts.push({ id: 'next', label: 'Start level 1', primary: true, fn: finishIntro });
-    else if (target) acts.push({ id: 'next', label: target.mode !== currentMode ? 'Next: ' + (target.mode === 'lose' ? 'Lose' : 'Survive') : 'Next level', primary: true, fn: goNext });
+    else if (target) acts.push({ id: 'next', label: target.mode !== currentMode ? 'Next: ' + (target.mode === 'lose' ? 'Stuck' : 'Survive') : 'Next level', primary: true, fn: goNext });
     if (lvl.daily) acts.push({ id: 'share', label: 'Share result', primary: !target, fn: function () { shareBtn.click(); } });
     else if (!lvl.draft && found < lvl.solutions && lvl.solutions <= 5) acts.push({ id: 'another', label: 'Another solution', fn: function () { loadLevel(modeIndex); } });
     acts.push({ id: 'map', label: 'Levels', fn: openMap });
@@ -6772,7 +7058,7 @@
   function renderClockTable() {
     var grid = document.getElementById('clockTableGrid'); grid.innerHTML = '';
     var head = document.createElement('div'); head.className = 'ct-row ct-head'; head.appendChild(document.createElement('span'));
-    [['a', 'Empty'], ['b', 'Filled'], ['s', 'Survive'], ['l', 'Lose']].forEach(function (v) { var s = document.createElement('span'); s.textContent = v[1]; head.appendChild(s); });
+    [['a', 'Empty'], ['b', 'Filled'], ['s', 'Survive'], ['l', 'Stuck']].forEach(function (v) { var s = document.createElement('span'); s.textContent = v[1]; head.appendChild(s); });
     grid.appendChild(head);
     CLOCK_OPPS.forEach(function (opp) {
       var row = document.createElement('div'); row.className = 'ct-row';
@@ -6791,7 +7077,7 @@
   function openClockPickerFor(opp, v) {
     var cc = document.getElementById('clockChips'), ic = document.getElementById('incChips'); cc.innerHTML = ''; ic.innerHTML = '';
     var e = clockEntry(opp, v) || {}, curClock = e.c !== undefined ? e.c : (v === 's' || v === 'l' ? 30 : 60), curInc = e.i !== undefined ? e.i : 0;
-    document.getElementById('clockModalTitle').textContent = (opponentInfo(opp).short || opponentInfo(opp).label) + ' · ' + ({ a: 'Empty', b: 'Filled', s: 'Survive', l: 'Lose' })[v];
+    document.getElementById('clockModalTitle').textContent = (opponentInfo(opp).short || opponentInfo(opp).label) + ' · ' + ({ a: 'Empty', b: 'Filled', s: 'Survive', l: 'Stuck' })[v];
     CLOCK_OPTIONS.forEach(function (sec) {
       var b = document.createElement('button'); b.className = 'chip-btn' + (sec === curClock ? ' active' : ''); b.textContent = clockLabel(sec); b.setAttribute('data-clock', String(sec));
       b.addEventListener('click', function () { setClockEntry(opp, v, sec, undefined); closeModal(clockModalEl); if (currentMode === 'duel') renderClockBtn(); openClockTable(); renderSettings(); });
@@ -6811,7 +7097,7 @@
     renderAdvanced();
     aiPauseSelectEl.value = aiPause();
     clockPresetSelectEl.value = clockPreset();
-    document.getElementById('clockPresetSub').textContent = clockPreset() === 'standard' ? '60 s a game, 30 s in puzzle duels, no increment.' : clockPreset() === 'comfortable' ? 'Room to think: 25–90 s with +1 to +5 s a move, longer against Hard and in Lose.' : clockPreset() === 'blitz' ? 'Fast and tense: 15–45 s with small increments.' : 'Your own table — tap Edit to change a cell.';
+    document.getElementById('clockPresetSub').textContent = clockPreset() === 'standard' ? '60 s a game, 30 s in puzzle duels, no increment.' : clockPreset() === 'comfortable' ? 'Room to think: 25–90 s with +1 to +5 s a move, longer against Hard and in Stuck.' : clockPreset() === 'blitz' ? 'Fast and tense: 15–45 s with small increments.' : 'Your own table — tap Edit to change a cell.';
     setToggleUI(soundToggleBtn, soundEnabled);
     setToggleUI(scoreToggleBtn, scoreEnabled);
     setToggleUI(hintPulseToggleBtn, hintPulseEnabled());
@@ -6865,7 +7151,7 @@
       section.className = 'prog-section';
       var h = document.createElement('div');
       h.className = 'prog-title';
-      h.textContent = (mode === 'survive' ? 'Survive' : 'Lose') + ' — ' + won.length + ' of ' + levels.length + ' won';
+      h.textContent = (mode === 'survive' ? 'Survive' : 'Stuck') + ' — ' + won.length + ' of ' + levels.length + ' won';
       section.appendChild(h);
       var tot = document.createElement('div');
       tot.className = 'prog-total';
@@ -7107,6 +7393,7 @@
     for (var i = 0; i < modals.length; i++) {
       if (modals[i] && modals[i].classList.contains('show')) { closeModal(modals[i]); return true; }
     }
+    if (!homeOpen()) { showHome(); return true; } // Back from a game goes home; Back on home exits
     return false;
   }
   try {
@@ -7119,6 +7406,100 @@
   } catch (e) {}
   window.addEventListener('resize', function () { fitCellSize(); relockTray(); if (currentMode === 'duel') renderModeBtn(); });
 
+  // ---------- Home screen ----------
+  // The first screen on every launch after the intro: the logo (its "t" is a
+  // chess king made of blocks) and one card per mode. ⌂ in the top bar and
+  // Android Back bring it back; a game in progress shows "Continue".
+  var homeEl = document.getElementById('home');
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, attrs) { var e = document.createElementNS(SVGNS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function buildLogoKing() {
+    var svg = document.getElementById('logoKing');
+    var KING = ['..#..', '.###.', '..#..', '#####', '.###.', '.###.', '.###.', '#####'];
+    var defs = svgEl('defs', {});
+    var g1 = svgEl('linearGradient', { id: 'kingFill', x1: '0', y1: '0', x2: '0', y2: '80', gradientUnits: 'userSpaceOnUse' });
+    g1.appendChild(svgEl('stop', { offset: '0', 'stop-color': '#4cc9f0' }));
+    g1.appendChild(svgEl('stop', { offset: '1', 'stop-color': '#c77dff' }));
+    var g2 = svgEl('linearGradient', { id: 'kingBevel', x1: '0', y1: '0', x2: '1', y2: '1' });
+    g2.appendChild(svgEl('stop', { offset: '0', 'stop-color': '#fff', 'stop-opacity': '0.45' }));
+    g2.appendChild(svgEl('stop', { offset: '0.5', 'stop-color': '#fff', 'stop-opacity': '0' }));
+    g2.appendChild(svgEl('stop', { offset: '1', 'stop-color': '#000', 'stop-opacity': '0.18' }));
+    defs.appendChild(g1); defs.appendChild(g2); svg.appendChild(defs);
+    var i = 0;
+    KING.forEach(function (row, r) {
+      row.split('').forEach(function (ch, c) {
+        if (ch !== '#') return;
+        var g = svgEl('g', { style: '--i:' + (i++) });
+        var a = { x: c * 10 + 0.6, y: r * 10 + 0.6, width: 8.8, height: 8.8, rx: 1.8 };
+        g.appendChild(svgEl('rect', Object.assign({ fill: 'url(#kingFill)' }, a)));
+        g.appendChild(svgEl('rect', Object.assign({ fill: 'url(#kingBevel)' }, a)));
+        svg.appendChild(g);
+      });
+    });
+  }
+  // Mode icons: a 4×4 mini board. '#' grey, '.' empty, a/b the card's colours.
+  var HOME_ICONS = {
+    survive: { rows: ['#.a.', '#.aa', 'bbbb', '##.#'], a: '--c-survive', b: '--c-survive2' },
+    stuck: { rows: ['#.##', '##.#', '#.##', '##.#'], a: '--c-stuck', b: '--c-stuck2' },
+    duel: { rows: ['aab.', 'a.bb', 'a#.b', '.#bb'], a: '--c-survive', b: '--c-duel' }
+  };
+  function buildHomeIcons() {
+    Array.prototype.forEach.call(homeEl.querySelectorAll('svg[data-icon]'), function (svg) {
+      var spec = HOME_ICONS[svg.getAttribute('data-icon')];
+      spec.rows.forEach(function (row, r) {
+        row.split('').forEach(function (ch, c) {
+          var fill = ch === '#' ? '#5b6780' : ch === '.' ? 'var(--grid-line)' : 'var(' + spec[ch] + ')';
+          svg.appendChild(svgEl('rect', { x: 1 + c * 10, y: 1 + r * 10, width: 9, height: 9, rx: 2, style: 'fill:' + fill + (ch === '.' ? ';opacity:0.7' : '') }));
+        });
+      });
+      if (svg.getAttribute('data-icon') === 'stuck') {
+        // A domino hovering over the board: every hole is a single cell, so it has nowhere to go.
+        var g = svgEl('g', { transform: 'rotate(-12 26 10)' });
+        [0, 1].forEach(function (k) { g.appendChild(svgEl('rect', { x: 16 + k * 10, y: 4, width: 9.4, height: 9.4, rx: 2, style: 'fill:var(--c-stuck);stroke:var(--empty);stroke-width:1.6' })); });
+        svg.appendChild(g);
+      }
+    });
+  }
+  function homeOpen() { return !homeEl.hidden; }
+  function renderHome() {
+    function count(mode) { return wonList(mode).length + ' / ' + LEVELS.filter(function (l) { return l.mode === mode; }).length; }
+    document.getElementById('homeProgSurvive').textContent = count('survive');
+    document.getElementById('homeProgStuck').textContent = count('lose');
+    document.getElementById('homeProgDuel').textContent = '★ ' + rating();
+    var g = duel.game;
+    var live = currentMode === 'duel' ? !!(g && g.phase !== 'over' && g.moves > 0) || online.active : history.length > 0 && !locked;
+    Array.prototype.forEach.call(homeEl.querySelectorAll('.mode-card'), function (card) {
+      card.querySelector('.mc-chip').hidden = !(live && card.getAttribute('data-home') === currentMode);
+    });
+  }
+  function showHome() {
+    if (drag) exitCarryModeIfAny();
+    hidePiecePopup();
+    renderHome();
+    homeEl.classList.remove('leaving');
+    homeEl.hidden = false;
+    homeEl.scrollTop = 0;
+    logEvent('home');
+  }
+  function hideHome(then) {
+    if (!homeOpen()) { if (then) then(); return; }
+    if (then) then(); // the game underneath is ready by the time the fade ends
+    homeEl.classList.add('leaving');
+    setTimeout(function () { homeEl.hidden = true; homeEl.classList.remove('leaving'); }, 180);
+  }
+  Array.prototype.forEach.call(homeEl.querySelectorAll('.mode-card'), function (card) {
+    card.addEventListener('click', function () {
+      var mode = card.getAttribute('data-home');
+      logEvent('home_pick', { mode: mode });
+      hideHome(function () { switchMode(mode); fitCellSize(); relockTray(); });
+    });
+  });
+  document.getElementById('homeBtn').addEventListener('click', showHome);
+  document.getElementById('homeSettingsBtn').addEventListener('click', function () { renderSettings(); openModal(settingsModalEl); });
+  document.getElementById('homeProgressBtn').addEventListener('click', function () { renderProgress(); openModal(progressModalEl); });
+  document.getElementById('homeDailyBtn').addEventListener('click', function () { hideHome(); openMap(); });
+  buildLogoKing(); buildHomeIcons();
+
   // ---------- Boot ----------
   JUICE.init({ boardEl: boardEl, wrapEl: document.getElementById('boardWrap'), cells: function () { return cellEls; } });
   JUICE.setCalm(getPref('bb_calm') === '1'); JUICE.setHaptics(getPref('bb_haptics') !== '0');
@@ -7129,7 +7510,7 @@
   buildGrid();
   renderKPIs();
   switchMode('survive');
-  if (!introDone()) startIntro(); else tryResume();
+  if (!introDone()) startIntro(); else { tryResume(); if (location.hash !== '#test') showHome(); } // automated suites start on the game screen
 
   // Bridge for builder.js (level builder + admin panel), which lives in its
   // own file and needs a few of the game's internals.
@@ -7414,7 +7795,7 @@
       var row = document.createElement('div'); row.className = 'brow-item';
       row.appendChild(mini(l.board));
       var n = document.createElement('span'); n.className = 'bn'; n.textContent = l.name || 'Untitled'; row.appendChild(n);
-      var m = document.createElement('span'); m.className = 'bm'; m.textContent = (l.mode === 'lose' ? 'Lose' : 'Survive') + (l.difficulty ? ' · ' + l.difficulty : '') + ' · ' + (l.status || 'draft'); row.appendChild(m);
+      var m = document.createElement('span'); m.className = 'bm'; m.textContent = (l.mode === 'lose' ? 'Stuck' : 'Survive') + (l.difficulty ? ' · ' + l.difficulty : '') + ' · ' + (l.status || 'draft'); row.appendChild(m);
       [['Edit', function () { draft = clone(l); saveDraft(); renderAll(); el.modal.scrollTop = 0; }],
        ['Play', function () { playLevel(clone(l)); }],
        ['✕', function () { BB.writeJSON('bb_my_levels', myLevels().filter(function (x) { return x.id !== l.id; })); renderMine(); }]
@@ -7460,7 +7841,7 @@
     draft.status = 'submitted'; draft.submitted = new Date().toISOString();
     upsertMine(draft); saveDraft(); renderMine();
     var code = encode(draft);
-    var text = 'Blockmate level submission — "' + draft.name + '" (' + (draft.mode === 'lose' ? 'Lose' : 'Survive') + ', ' + draft.difficulty + ', ' + draft.solutions + ' solutions)' + (draft.author ? ' by ' + draft.author : '') + '\n' + code;
+    var text = 'Blockmate level submission — "' + draft.name + '" (' + (draft.mode === 'lose' ? 'Stuck' : 'Survive') + ', ' + draft.difficulty + ', ' + draft.solutions + ' solutions)' + (draft.author ? ' by ' + draft.author : '') + '\n' + code;
     BB.logEvent('builder_submit', { id: draft.id, mode: draft.mode, difficulty: draft.difficulty });
     BB.share({ title: 'Blockmate level submission', text: text }).then(function (ok) {
       if (ok) { el.result.innerHTML = '<span class="ok">Submitted — thank you! You\'ll hear back in the inbox.</span>'; el.shareBox.hidden = true; return; }
@@ -7478,7 +7859,7 @@
       var row = document.createElement('div'); row.className = 'brow-item';
       row.appendChild(mini(l.board));
       var n = document.createElement('span'); n.className = 'bn'; n.textContent = l.name; row.appendChild(n);
-      var m = document.createElement('span'); m.className = 'bm'; m.textContent = (l.mode === 'lose' ? 'Lose' : 'Survive') + ' · ' + l.difficulty + (l.author ? ' · ' + l.author : ''); row.appendChild(m);
+      var m = document.createElement('span'); m.className = 'bm'; m.textContent = (l.mode === 'lose' ? 'Stuck' : 'Survive') + ' · ' + l.difficulty + (l.author ? ' · ' + l.author : ''); row.appendChild(m);
       var btn = document.createElement('button'); btn.className = 'ctrl'; btn.textContent = 'Remove';
       btn.addEventListener('click', function () { BB.writeJSON('bb_community_levels', approvedLevels().filter(function (x) { return x.id !== l.id; })); renderApproved(); BB.levelsChanged(); });
       row.appendChild(btn);
@@ -7496,7 +7877,7 @@
       var res = runTest(lvl); applyTest(lvl, res);
       var head = document.createElement('div'); head.className = 'ahead';
       head.appendChild(mini(lvl.board));
-      var b = document.createElement('b'); b.textContent = lvl.name + ' — ' + (lvl.mode === 'lose' ? 'Lose' : 'Survive') + (lvl.author ? ' · by ' + lvl.author : ''); head.appendChild(b);
+      var b = document.createElement('b'); b.textContent = lvl.name + ' — ' + (lvl.mode === 'lose' ? 'Stuck' : 'Survive') + (lvl.author ? ' · by ' + lvl.author : ''); head.appendChild(b);
       card.appendChild(head);
       var pcs = document.createElement('div'); pcs.className = 'bpieces'; lvl.pieces.forEach(function (k) { pcs.appendChild(thumb(k, 8)); }); card.appendChild(pcs);
       var r = document.createElement('div'); r.className = 'bresult'; r.innerHTML = resultHTML(res) + (lvl.claimed.difficulty && lvl.claimed.difficulty !== res.difficulty ? '<br><span class="bnote">Submitted as ' + esc(lvl.claimed.difficulty) + '.</span>' : ''); card.appendChild(r);
@@ -7510,7 +7891,7 @@
         list.push({ id: lvl.id, mode: lvl.mode, name: lvl.name, difficulty: res.difficulty || lvl.claimed.difficulty || 'Medium', solutions: res.solutions || lvl.claimed.solutions || 1, board: lvl.board, pieces: lvl.pieces, author: lvl.author, approved: new Date().toISOString() });
         BB.writeJSON('bb_community_levels', list);
         BB.levelsChanged(); renderApproved();
-        r.innerHTML += '<br><span class="ok">Approved — it\'s in the ' + (lvl.mode === 'lose' ? 'Lose' : 'Survive') + ' list now (✦).</span>';
+        r.innerHTML += '<br><span class="ok">Approved — it\'s in the ' + (lvl.mode === 'lose' ? 'Stuck' : 'Survive') + ' list now (✦).</span>';
         ok.disabled = true; ok.textContent = 'Approved';
       });
       var no = document.createElement('button'); no.className = 'ctrl'; no.textContent = 'Reject';
